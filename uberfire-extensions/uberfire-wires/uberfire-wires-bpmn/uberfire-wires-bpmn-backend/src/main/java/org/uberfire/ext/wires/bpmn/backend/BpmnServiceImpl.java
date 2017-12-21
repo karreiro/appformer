@@ -170,8 +170,26 @@ public class BpmnServiceImpl implements BpmnService {
     }
 
     @Override
-    public Path saveAndRename(final Path context, final String newFileName, final ProcessNode content, final String comment) {
-        return null;
+    public Path saveAndRename(final Path path,
+                              final String newFileName,
+                              final ProcessNode content,
+                              final String comment) {
+        try {
+
+            ioService.write(Paths.convert(path),
+                            BpmnPersistence.getInstance().marshal(content),
+                            MetadataFactory.makeMetadata(null),
+                            CommentedOptionFactory.makeCommentedOption(identity,
+                                                                       sessionInfo,
+                                                                       comment));
+
+
+            return renameService.rename(path,
+                                        newFileName,
+                                        comment);
+        } catch (Exception e) {
+            throw ExceptionUtilities.handleException(e);
+        }
     }
 
     @Override
