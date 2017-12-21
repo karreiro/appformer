@@ -29,7 +29,7 @@ import org.uberfire.ext.plugin.model.Plugin;
 @Remote
 public interface PerspectiveServices
         extends SupportsCopy,
-                SupportsRename,
+                SupportsRename<LayoutTemplate>,
                 SupportsDelete {
 
     Plugin createNewPerspective(String name, LayoutTemplate.Style style);

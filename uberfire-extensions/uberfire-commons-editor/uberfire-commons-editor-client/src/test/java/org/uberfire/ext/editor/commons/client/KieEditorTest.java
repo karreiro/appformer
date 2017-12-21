@@ -16,6 +16,9 @@
 
 package org.uberfire.ext.editor.commons.client;
 
+import java.util.Set;
+import java.util.function.Supplier;
+
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jboss.errai.security.shared.api.identity.User;
 import org.junit.Before;
@@ -53,10 +56,15 @@ public class KieEditorTest {
     public void setUp() throws Exception {
         view = mock(BaseEditorView.class);
         restoreEvent = mock(RestoreEvent.class);
-        kieEditor = spy(new BaseEditor(view) {
+        kieEditor = spy(new BaseEditor<String>(view) {
 
             @Override
             protected void loadContent() {
+            }
+
+            @Override
+            protected Supplier<String> getContentSupplier() {
+                return null;
             }
 
             @Override
@@ -208,10 +216,12 @@ public class KieEditorTest {
             }
         };
 
+        final Set<MenuItems> menuItems = kieEditor.menuItems;
+
         kieEditor.init(new ObservablePathImpl(),
                        kieEditor.place,
                        kieEditor.type,
-                       kieEditor.menuItems.toArray(new MenuItems[0]));
+                       menuItems.toArray(new MenuItems[0]));
 
         kieEditor.onSave();
 

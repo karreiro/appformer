@@ -15,6 +15,8 @@
  */
 package org.uberfire.ext.editor.commons.client.menu;
 
+import java.util.function.Supplier;
+
 import org.jboss.errai.common.client.api.Caller;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.ext.editor.commons.client.validation.Validator;
@@ -25,7 +27,7 @@ import org.uberfire.mvp.Command;
 import org.uberfire.workbench.model.menu.MenuItem;
 import org.uberfire.workbench.model.menu.Menus;
 
-public interface BasicFileMenuBuilder extends HasLockSyncMenuStateHelper {
+public interface BasicFileMenuBuilder<T> extends HasLockSyncMenuStateHelper {
 
     Menus build();
 
@@ -49,18 +51,22 @@ public interface BasicFileMenuBuilder extends HasLockSyncMenuStateHelper {
 
     BasicFileMenuBuilder addDelete(final Command command);
 
-    BasicFileMenuBuilder addRename(final Command command);
-
     BasicFileMenuBuilder addRename(final Path path,
-                                   final Caller<? extends SupportsRename> renameCaller);
-
-    BasicFileMenuBuilder addRename(final Path path,
-                                   final Validator validator,
-                                   final Caller<? extends SupportsRename> renameCaller);
+                                   final Caller<? extends SupportsRename<T>> renameCaller,
+                                   final Supplier<T> contentSupplier,
+                                   final Supplier<Boolean> dirtySupplier);
 
     BasicFileMenuBuilder addRename(final PathProvider provider,
                                    final Validator validator,
-                                   final Caller<? extends SupportsRename> renameCaller);
+                                   final Caller<? extends SupportsRename<T>> renameCaller,
+                                   final Supplier<T> contentSupplier,
+                                   final Supplier<Boolean> dirtySupplier);
+
+    BasicFileMenuBuilder addRename(final Path path,
+                                   final Validator validator,
+                                   final Caller<? extends SupportsRename<T>> renameCaller,
+                                   final Supplier<T> contentSupplier,
+                                   final Supplier<Boolean> dirtySupplier);
 
     BasicFileMenuBuilder addCopy(final Command command);
 

@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import javax.enterprise.event.Event;
+import javax.enterprise.util.TypeLiteral;
 
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.ext.widgets.core.client.wizards.Wizard;
@@ -75,6 +76,11 @@ public class WizardTestUtils {
             return null;
         }
 
+//        @Override
+//        public <U extends WizardPageStatusChangeEvent> Event<U> select(final TypeLiteral<U> typeLiteral, final Annotation... annotations) {
+//            return null;
+//        }
+
         public void addEventHandler(WizardPageStatusChangeHandler eventHandler) {
             eventHandlers.add(eventHandler);
         }
@@ -106,6 +112,11 @@ public class WizardTestUtils {
                                                              Annotation... annotations) {
             return null;
         }
+
+//        @Override
+//        public <U extends NotificationEvent> Event<U> select(final TypeLiteral<U> typeLiteral, final Annotation... annotations) {
+//            return null;
+//        }
 
         public void addEventHandler(NotificationEventHandler eventHandler) {
             eventHandlers.add(eventHandler);

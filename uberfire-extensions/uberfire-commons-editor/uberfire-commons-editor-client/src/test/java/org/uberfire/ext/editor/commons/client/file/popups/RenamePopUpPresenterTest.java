@@ -71,7 +71,7 @@ public class RenamePopUpPresenterTest {
 
         assertNotNull(presenter.getPath());
         assertNotNull(presenter.getValidator());
-        assertNotNull(presenter.getCommand());
+        assertNotNull(presenter.getRenameCommand());
         verify(view).show();
         verify(view).setOriginalFileName("");
     }
@@ -104,7 +104,7 @@ public class RenamePopUpPresenterTest {
 
         assertNotNull(presenter.getPath());
         assertNotNull(presenter.getValidator());
-        assertNotNull(presenter.getCommand());
+        assertNotNull(presenter.getRenameCommand());
         verify(view).show();
         verify(view).setOriginalFileName("");
     }

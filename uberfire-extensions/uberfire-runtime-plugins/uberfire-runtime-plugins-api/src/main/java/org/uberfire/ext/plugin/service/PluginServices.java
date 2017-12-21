@@ -28,15 +28,13 @@ import org.uberfire.ext.plugin.model.LayoutEditorModel;
 import org.uberfire.ext.plugin.model.Media;
 import org.uberfire.ext.plugin.model.Plugin;
 import org.uberfire.ext.plugin.model.PluginContent;
-import org.uberfire.ext.plugin.model.PluginSimpleContent;
 import org.uberfire.ext.plugin.model.PluginType;
 import org.uberfire.ext.plugin.model.RuntimePlugin;
 
 @Remote
-public interface PluginServices
-        extends SupportsDelete,
-                SupportsCopy,
-                SupportsRename {
+public interface PluginServices extends SupportsDelete,
+                                        SupportsCopy,
+                                        SupportsRename<Plugin> {
 
     String getMediaServletURI();
 
@@ -55,7 +53,7 @@ public interface PluginServices
 
     DynamicMenu getDynamicMenuContent(final Path path);
 
-    Path save(final PluginSimpleContent plugin,
+    Path save(final Plugin plugin,
               final String commitMessage);
 
     LayoutEditorModel getLayoutEditor(Path path,

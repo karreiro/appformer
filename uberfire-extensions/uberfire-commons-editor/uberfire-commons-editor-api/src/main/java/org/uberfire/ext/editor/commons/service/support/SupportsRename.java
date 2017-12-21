@@ -17,9 +17,14 @@ package org.uberfire.ext.editor.commons.service.support;
 
 import org.uberfire.backend.vfs.Path;
 
-public interface SupportsRename {
+public interface SupportsRename<T> {
 
     Path rename(final Path path,
                 final String newName,
                 final String comment);
+
+    Path saveAndRename(final Path context,
+                       final String newFileName,
+                       final T content,
+                       final String comment);
 }

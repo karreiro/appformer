@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -53,7 +55,7 @@ import org.uberfire.workbench.model.menu.Menus;
 
 import static org.uberfire.workbench.model.menu.MenuFactory.newSimpleItem;
 
-public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
+public class BasicFileMenuBuilderImpl<T> implements BasicFileMenuBuilder<T> {
 
     private RestoreVersionCommandProvider restoreVersionCommandProvider;
     private Event<NotificationEvent> notification;
@@ -71,9 +73,9 @@ public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
     private Command validateCommand = null;
     private Command restoreCommand = null;
     private MenuItem restoreMenuItem;
-    private List<Pair<String, Command>> otherCommands = new ArrayList<Pair<String, Command>>();
-    private List<MenuItem> topLevelMenus = new ArrayList<MenuItem>();
-    private List<MenuItem> menuItemsSyncedWithLockState = new ArrayList<MenuItem>();
+    private List<Pair<String, Command>> otherCommands = new ArrayList<>();
+    private List<MenuItem> topLevelMenus = new ArrayList<>();
+    private List<MenuItem> menuItemsSyncedWithLockState = new ArrayList<>();
     private LockSyncMenuStateHelper lockSyncMenuStateHelper = new BasicFileMenuBuilder.BasicLockSyncMenuStateHelper();
 
     @Inject
@@ -163,34 +165,21 @@ public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
         return this;
     }
 
-    @Override
-    public BasicFileMenuBuilder addRename(final Command command) {
+    BasicFileMenuBuilder addRename(final Command command) {
         this.renameCommand = command;
         return this;
     }
 
     @Override
     public BasicFileMenuBuilder addRename(final Path path,
-                                          final Caller<? extends SupportsRename> renameCaller) {
+                                          final Caller<? extends SupportsRename<T>> renameCaller,
+                                          final Supplier<T> contentSupplier,
+                                          final Supplier<Boolean> dirtySupplier) {
         return addRename(() -> {
             CommandWithFileNameAndCommitMessage command = getRenamePopupCommand(renameCaller,
                                                                                 path,
                                                                                 renamePopUpPresenter.getView());
             renamePopUpPresenter.show(path,
-                                      command);
-        });
-    }
-
-    @Override
-    public BasicFileMenuBuilder addRename(final Path path,
-                                          final Validator validator,
-                                          final Caller<? extends SupportsRename> renameCaller) {
-        return addRename(() -> {
-            CommandWithFileNameAndCommitMessage command = getRenamePopupCommand(renameCaller,
-                                                                                path,
-                                                                                renamePopUpPresenter.getView());
-            renamePopUpPresenter.show(path,
-                                      validator,
                                       command);
         });
     }
@@ -198,7 +187,9 @@ public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
     @Override
     public BasicFileMenuBuilder addRename(final PathProvider provider,
                                           final Validator validator,
-                                          final Caller<? extends SupportsRename> renameCaller) {
+                                          final Caller<? extends SupportsRename<T>> renameCaller,
+                                          final Supplier<T> contentSupplier,
+                                          final Supplier<Boolean> dirtySupplier) {
         return addRename(() -> {
             final Path path = provider.getPath();
             final CommandWithFileNameAndCommitMessage command = getRenamePopupCommand(renameCaller,
@@ -207,6 +198,39 @@ public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
             renamePopUpPresenter.show(path,
                                       validator,
                                       command);
+        });
+    }
+
+    @Override
+    public BasicFileMenuBuilder addRename(final Path path,
+                                          final Validator validator,
+                                          final Caller<? extends SupportsRename<T>> renameCaller,
+                                          final Supplier<T> contentSupplier,
+                                          final Supplier<Boolean> dirty) {
+
+        return addRename(() -> {
+
+            final RenamePopUpPresenter.View renamePopupView = renamePopUpPresenter.getView();
+            final RemoteCallback<Path> successCallback = getRenameSuccessCallback(renamePopupView);
+            final HasBusyIndicatorDefaultErrorCallback errorCallback = getRenameErrorCallback(renamePopupView,
+                                                                                              busyIndicatorView);
+
+            final CommandWithFileNameAndCommitMessage rename = getRenamePopupCommand(renameCaller,
+                                                                                     path,
+                                                                                     renamePopUpPresenter.getView());
+
+            final CommandWithFileNameAndCommitMessage saveAndRename = (details) -> {
+
+                final String newFileName = details.getNewFileName();
+                final T content = contentSupplier.get();
+                final String comment = details.getCommitMessage();
+
+                busyIndicatorView.showBusyIndicator(CommonConstants.INSTANCE.Renaming());
+
+                renameCaller.call(successCallback, errorCallback).saveAndRename(path, newFileName, content, comment);
+            };
+
+            renamePopUpPresenter.show(path, validator, dirty.get(), rename, saveAndRename);
         });
     }
 

@@ -43,9 +43,6 @@ public class SplashEditorPresenter
     private SplashPluginResourceType resourceType;
 
     @Inject
-    private Caller<PluginServices> pluginServices;
-
-    @Inject
     public SplashEditorPresenter(final SplashEditorView baseView) {
         super(baseView);
     }

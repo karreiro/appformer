@@ -16,6 +16,8 @@
 
 package org.uberfire.ext.editor.commons.client.htmleditor;
 
+import java.util.function.Supplier;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
@@ -24,6 +26,7 @@ import com.google.gwt.user.client.ui.IsWidget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.uberfire.backend.vfs.ObservablePath;
+import org.uberfire.backend.vfs.Path;
 import org.uberfire.backend.vfs.VFSService;
 import org.uberfire.client.annotations.WorkbenchEditor;
 import org.uberfire.client.annotations.WorkbenchMenu;
@@ -49,7 +52,7 @@ import static org.uberfire.ext.editor.commons.client.menu.MenuItems.SAVE;
 
 @Dependent
 @WorkbenchEditor(identifier = "HtmlEditor", supportedTypes = HtmlResourceType.class)
-public class HtmlEditor extends BaseEditor {
+public class HtmlEditor extends BaseEditor<String> {
 
     private HtmlResourceType htmlResourceType;
 
@@ -59,7 +62,7 @@ public class HtmlEditor extends BaseEditor {
 
     private Caller<DeleteService> deleteService;
 
-    private Caller<RenameService> renameService;
+    private Caller<RenameService<String>> renameService;
 
     private Caller<CopyService> copyService;
 
@@ -68,7 +71,7 @@ public class HtmlEditor extends BaseEditor {
                       final HtmlEditorPresenter editor,
                       final Caller<VFSService> vfsServices,
                       final Caller<DeleteService> deleteService,
-                      final Caller<RenameService> renameService,
+                      final Caller<RenameService<String>> renameService,
                       final Caller<CopyService> copyService) {
         super(editor.getView());
         this.htmlResourceType = htmlResourceType;
@@ -98,20 +101,30 @@ public class HtmlEditor extends BaseEditor {
 
     @Override
     protected void loadContent() {
+
+        final ObservablePath currentPath = versionRecordManager.getCurrentPath();
+
         baseView.hideBusyIndicator();
-        vfsServices.call(new RemoteCallback<String>() {
-            @Override
-            public void callback(final String htmlContent) {
-                editor.setContent(htmlContent);
-            }
-        }).readAllString(versionRecordManager.getCurrentPath());
+
+        vfsServices.call((final String htmlContent) -> {
+            editor.setContent(htmlContent);
+        }).readAllString(currentPath);
+    }
+
+    @Override
+    protected Supplier<String> getContentSupplier() {
+        return () -> editor.getContent();
     }
 
     @Override
     protected void save() {
+
         final String htmlContent = editor.getContent();
-        vfsServices.call(getSaveSuccessCallback(htmlContent.hashCode())).write(versionRecordManager.getCurrentPath(),
-                                                                               htmlContent);
+        final RemoteCallback<Path> successCallback = getSaveSuccessCallback(htmlContent.hashCode());
+        final ObservablePath currentPath = versionRecordManager.getCurrentPath();
+
+        vfsServices.call(successCallback).write(currentPath, htmlContent);
+
         concurrentUpdateSessionInfo = null;
     }
 
@@ -121,7 +134,7 @@ public class HtmlEditor extends BaseEditor {
     }
 
     @Override
-    protected Caller<? extends SupportsRename> getRenameServiceCaller() {
+    protected Caller<? extends SupportsRename<String>> getRenameServiceCaller() {
         return renameService;
     }
 

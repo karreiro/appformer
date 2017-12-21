@@ -54,7 +54,7 @@ public class RuntimePluginBaseEditorTest {
     @Before
     public void setup() {
         pluginServices = mock(PluginServices.class);
-        callerMock = new CallerMock<PluginServices>(pluginServices);
+        callerMock = new CallerMock<>(pluginServices);
         successCallBack = mock(RemoteCallback.class);
         baseEditorView = mock(RuntimePluginBaseView.class);
         editor = spy(createRuntimePluginBaseEditor());

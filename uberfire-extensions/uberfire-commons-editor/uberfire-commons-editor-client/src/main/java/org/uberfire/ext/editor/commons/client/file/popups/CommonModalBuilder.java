@@ -43,6 +43,13 @@ public class CommonModalBuilder {
         return this;
     }
 
+    public CommonModalBuilder addBody(final elemental2.dom.HTMLElement htmlElement) {
+        modal.add(buildPanel(htmlElement,
+                             new ModalBody()));
+
+        return this;
+    }
+
     public CommonModalBuilder addFooter(ModalFooter footer) {
         modal.add(footer);
         return this;
@@ -58,10 +65,20 @@ public class CommonModalBuilder {
         return modal;
     }
 
-    private FlowPanel buildPanel(HTMLElement element,
-                                 FlowPanel panel) {
+    private FlowPanel buildPanel(final elemental2.dom.HTMLElement element,
+                                 final FlowPanel panel) {
         panel.add(build(element));
         return panel;
+    }
+
+    private FlowPanel buildPanel(final HTMLElement element,
+                                 final FlowPanel panel) {
+        panel.add(build(element));
+        return panel;
+    }
+
+    private Widget build(elemental2.dom.HTMLElement element) {
+        return ElementWrapperWidget.getWidget(element);
     }
 
     private Widget build(HTMLElement element) {

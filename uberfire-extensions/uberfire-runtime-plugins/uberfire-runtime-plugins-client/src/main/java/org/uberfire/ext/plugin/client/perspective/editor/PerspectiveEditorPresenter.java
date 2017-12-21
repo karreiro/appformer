@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
@@ -75,7 +76,7 @@ import static org.uberfire.ext.editor.commons.client.menu.MenuItems.SAVE;
 
 @Dependent
 @WorkbenchEditor(identifier = "Perspective Editor", supportedTypes = {PerspectiveLayoutPluginResourceType.class}, priority = Integer.MAX_VALUE)
-public class PerspectiveEditorPresenter extends BaseEditor {
+public class PerspectiveEditorPresenter extends BaseEditor<LayoutTemplate> {
 
     @Inject
     private View perspectiveEditorView;
@@ -228,6 +229,11 @@ public class PerspectiveEditorPresenter extends BaseEditor {
         layoutEditorPlugin.load(versionRecordManager.getCurrentPath(), this::afterLoad);
     }
 
+    @Override
+    protected Supplier<LayoutTemplate> getContentSupplier() {
+        return layoutEditorPlugin::getLayout;
+    }
+
     protected void afterLoad() {
         setOriginalHash(getCurrentModelHash());
         plugin = new Plugin(layoutEditorPlugin.getLayout().getName(),
@@ -275,7 +281,7 @@ public class PerspectiveEditorPresenter extends BaseEditor {
     }
 
     @Override
-    protected Caller<? extends SupportsRename> getRenameServiceCaller() {
+    protected Caller<? extends SupportsRename<LayoutTemplate>> getRenameServiceCaller() {
         return perspectiveServices;
     }
 

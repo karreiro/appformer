@@ -43,9 +43,6 @@ public class ScreenEditorPresenter
     private ScreenPluginResourceType resourceType;
 
     @Inject
-    private Caller<PluginServices> pluginServices;
-
-    @Inject
     public ScreenEditorPresenter(final ScreenEditorView baseView) {
         super(baseView);
     }

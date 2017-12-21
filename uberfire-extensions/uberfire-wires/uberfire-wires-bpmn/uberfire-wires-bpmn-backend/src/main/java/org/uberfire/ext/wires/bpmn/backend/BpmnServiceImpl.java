@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -165,6 +167,11 @@ public class BpmnServiceImpl implements BpmnService {
         } catch (Exception e) {
             throw ExceptionUtilities.handleException(e);
         }
+    }
+
+    @Override
+    public Path saveAndRename(final Path context, final String newFileName, final ProcessNode content, final String comment) {
+        return null;
     }
 
     @Override

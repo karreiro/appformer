@@ -17,6 +17,7 @@
 package org.uberfire.ext.layout.editor.impl;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -122,6 +123,11 @@ public class PerspectiveServicesImpl implements PerspectiveServices {
         Path pathRenamed = pluginServices.rename(path, newName, comment);
         this.setLayoutTemplateName(pathRenamed, newName, comment);
         return pathRenamed;
+    }
+
+    @Override
+    public Path saveAndRename(final Path context, final String newFileName, final LayoutTemplate content, final String comment) {
+        return context;
     }
 
     @Override

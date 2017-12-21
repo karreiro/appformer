@@ -25,7 +25,7 @@ import org.uberfire.ext.editor.commons.service.support.SupportsRename;
  * Responsible for paths renaming.
  */
 @Remote
-public interface RenameService extends SupportsRename {
+public interface RenameService<T> extends SupportsRename<T> {
 
     /**
      * Renames (in batch) the paths passed in {@param paths}, if they exist.

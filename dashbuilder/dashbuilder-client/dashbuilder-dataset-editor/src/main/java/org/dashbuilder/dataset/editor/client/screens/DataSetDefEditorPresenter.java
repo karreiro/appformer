@@ -64,6 +64,7 @@ import javax.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.kie.soup.commons.validation.PortablePreconditions.checkNotNull;
 import static org.uberfire.ext.editor.commons.client.menu.MenuItems.*;
@@ -72,7 +73,7 @@ import static org.uberfire.workbench.events.NotificationEvent.NotificationType.S
 
 @Dependent
 @WorkbenchEditor(identifier = "DataSetDefEditor", supportedTypes = {DataSetDefType.class}, priority = Integer.MAX_VALUE)
-public class DataSetDefEditorPresenter extends BaseEditor {
+public class DataSetDefEditorPresenter extends BaseEditor<EditDataSetDef> {
 
     @Inject
     SyncBeanManager beanManager;
@@ -92,6 +93,8 @@ public class DataSetDefEditorPresenter extends BaseEditor {
     @Inject
     public DataSetDefScreenView view;
     DataSetEditWorkflow workflow;
+
+    private EditDataSetDef editDataSetDef;
 
     @OnStartup
     public void onStartup(final ObservablePath path,
@@ -157,6 +160,15 @@ public class DataSetDefEditorPresenter extends BaseEditor {
             // Edit only the definition, so user can fix the wrong attributes, if any.
             loadDefinition();
         }
+    }
+
+    @Override
+    protected Supplier<EditDataSetDef> getContentSupplier() {
+        return this::getEditDataSetDef;
+    }
+
+    EditDataSetDef getEditDataSetDef() {
+        return editDataSetDef;
     }
 
     private void loadDefinition() {
@@ -269,6 +281,9 @@ public class DataSetDefEditorPresenter extends BaseEditor {
     };
 
     RemoteCallback<EditDataSetDef> loadCallback = result -> {
+
+        this.editDataSetDef = result;
+
         load(result != null ? result.getDefinition() : null,
              result != null ? result.getColumns() : null);
     };

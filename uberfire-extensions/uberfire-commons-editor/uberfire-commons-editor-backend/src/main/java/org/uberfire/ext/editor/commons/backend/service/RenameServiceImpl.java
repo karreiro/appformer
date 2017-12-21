@@ -17,6 +17,8 @@
 package org.uberfire.ext.editor.commons.backend.service;
 
 import java.util.Collection;
+import java.util.function.Supplier;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -39,8 +41,7 @@ import org.uberfire.java.nio.file.Files;
 import org.uberfire.rpc.SessionInfo;
 
 @Service
-@ApplicationScoped
-public class RenameServiceImpl implements RenameService {
+public class RenameServiceImpl<T> implements RenameService<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RenameServiceImpl.class);
 
@@ -78,6 +79,14 @@ public class RenameServiceImpl implements RenameService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Path saveAndRename(final Path context,
+                              final String newFileName,
+                              final T content,
+                              final String comment) {
+        return context;
     }
 
     @Override

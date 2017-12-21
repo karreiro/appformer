@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
+
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -65,7 +67,7 @@ import static org.uberfire.ext.widgets.common.client.common.ConcurrentChangePopu
 import static org.uberfire.ext.widgets.common.client.common.ConcurrentChangePopup.newConcurrentRename;
 import static org.uberfire.ext.widgets.common.client.common.ConcurrentChangePopup.newConcurrentUpdate;
 
-public abstract class BaseEditor {
+public abstract class BaseEditor<T> {
 
     protected boolean isReadOnly;
 
@@ -88,7 +90,7 @@ public abstract class BaseEditor {
     protected VersionRecordManager versionRecordManager;
 
     @Inject
-    protected BasicFileMenuBuilder menuBuilder;
+    protected BasicFileMenuBuilder<T> menuBuilder;
 
     @Inject
     protected DefaultFileNameValidator fileNameValidator;
@@ -105,7 +107,7 @@ public abstract class BaseEditor {
     @Inject
     protected Event<ConcurrentRenameIgnoredEvent> concurrentRenameIgnoredEvent;
 
-    protected Set<MenuItems> menuItems = new HashSet<MenuItems>();
+    protected Set<MenuItems> menuItems = new HashSet<>();
 
     protected PlaceRequest place;
     protected ClientResourceType type;
@@ -216,7 +218,9 @@ public abstract class BaseEditor {
         if (menuItems.contains(RENAME)) {
             menuBuilder.addRename(versionRecordManager.getPathToLatest(),
                                   getRenameValidator(),
-                                  getRenameServiceCaller());
+                                  getRenameServiceCaller(),
+                                  getContentSupplier(),
+                                  isDirtySupplier());
         }
         if (menuItems.contains(DELETE)) {
             menuBuilder.addDelete(versionRecordManager.getCurrentPath(),
@@ -478,6 +482,24 @@ public abstract class BaseEditor {
 
     protected abstract void loadContent();
 
+    protected abstract Supplier<T> getContentSupplier();
+
+    protected Supplier<Boolean> isDirtySupplier() {
+
+        return () -> {
+
+            final T currentContent;
+
+            try {
+                currentContent = getContentSupplier().get();
+            } catch (final Exception e) {
+                return false;
+            }
+
+            return isDirty(currentContent.hashCode());
+        };
+    }
+
     /**
      * Needs to be overwritten for save to work
      */
@@ -489,7 +511,7 @@ public abstract class BaseEditor {
         return null;
     }
 
-    protected Caller<? extends SupportsRename> getRenameServiceCaller() {
+    protected Caller<? extends SupportsRename<T>> getRenameServiceCaller() {
         return null;
     }
 
@@ -517,4 +539,3 @@ public abstract class BaseEditor {
         return this.versionRecordManager;
     }
 }
-

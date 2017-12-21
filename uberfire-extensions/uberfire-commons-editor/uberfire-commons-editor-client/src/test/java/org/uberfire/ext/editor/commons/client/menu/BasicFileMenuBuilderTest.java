@@ -16,6 +16,8 @@
 
 package org.uberfire.ext.editor.commons.client.menu;
 
+import java.util.function.Supplier;
+
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,8 +43,14 @@ import org.uberfire.workbench.model.menu.MenuItem;
 import org.uberfire.workbench.model.menu.MenuItemCommand;
 import org.uberfire.workbench.model.menu.Menus;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(GwtMockitoTestRunner.class)
 public class BasicFileMenuBuilderTest {
@@ -81,22 +89,29 @@ public class BasicFileMenuBuilderTest {
     @Mock
     private SupportsRename renameService;
 
-    private CallerMock<SupportsRename> renameCaller;
+    @Mock
+    private Supplier<String> contentSupplier;
+
+    @Mock
+    private Supplier<Boolean> dirtySupplier;
+
+    private CallerMock<SupportsRename<String>> renameCaller;
 
     @Mock
     private SupportsCopy copyService;
+
     private CallerMock<SupportsCopy> copyCaller;
 
-    private BasicFileMenuBuilderImpl builder;
+    private BasicFileMenuBuilderImpl<String> builder;
 
     @Before
     public void setup() {
-        builder = new BasicFileMenuBuilderImpl(deletePopUpPresenter,
-                                               copyPopUpPresenter,
-                                               renamePopUpPresenter,
-                                               busyIndicatorView,
-                                               notification,
-                                               restoreVersionCommandProvider);
+        builder = new BasicFileMenuBuilderImpl<>(deletePopUpPresenter,
+                                                 copyPopUpPresenter,
+                                                 renamePopUpPresenter,
+                                                 busyIndicatorView,
+                                                 notification,
+                                                 restoreVersionCommandProvider);
         deleteCaller = new CallerMock<>(deleteService);
         renameCaller = new CallerMock<>(renameService);
         when(provider.getPath()).thenReturn(mockPath);
@@ -178,7 +193,9 @@ public class BasicFileMenuBuilderTest {
     public void testRename() {
         builder.addRename(provider,
                           validator,
-                          renameCaller);
+                          renameCaller,
+                          contentSupplier,
+                          dirtySupplier);
 
         final Menus menus = builder.build();
         final MenuItem mi = menus.getItems().get(0);

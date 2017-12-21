@@ -35,7 +35,7 @@ public interface BpmnService extends SupportsCreate<ProcessNode>,
                                      SupportsUpdate<ProcessNode, Metadata>,
                                      SupportsDelete,
                                      SupportsCopy,
-                                     SupportsRename {
+                                     SupportsRename<ProcessNode> {
 
     List<Path> listFiles();
 

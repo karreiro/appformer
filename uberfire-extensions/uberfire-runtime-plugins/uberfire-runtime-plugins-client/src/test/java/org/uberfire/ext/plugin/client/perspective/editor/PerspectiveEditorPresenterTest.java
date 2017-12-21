@@ -17,6 +17,7 @@ package org.uberfire.ext.plugin.client.perspective.editor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jboss.errai.common.client.api.Caller;
@@ -64,7 +65,7 @@ public class PerspectiveEditorPresenterTest {
     VersionRecordManager versionRecordManager;
 
     @Mock
-    BasicFileMenuBuilder menuBuilder;
+    BasicFileMenuBuilder<?> menuBuilder;
 
     @Mock
     LayoutEditorPlugin layoutEditorPlugin;
@@ -139,7 +140,7 @@ public class PerspectiveEditorPresenterTest {
 
         verify(menuBuilder).addSave(any(Command.class));
         verify(menuBuilder).addCopy(any(Path.class), any(Validator.class), any(Caller.class));
-        verify(menuBuilder).addRename(any(Path.class), any(Validator.class), any(Caller.class));
+        verify(menuBuilder).addRename(any(Path.class), any(Validator.class), any(Caller.class), any(Supplier.class), any(Supplier.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder, never()).addNewTopLevelMenu(any());
@@ -152,7 +153,7 @@ public class PerspectiveEditorPresenterTest {
 
         verify(menuBuilder).addSave(any(Command.class));
         verify(menuBuilder).addCopy(any(Path.class), any(Validator.class), any(Caller.class));
-        verify(menuBuilder).addRename(any(Path.class), any(Validator.class), any(Caller.class));
+        verify(menuBuilder).addRename(any(Path.class), any(Validator.class), any(Caller.class), any(Supplier.class), any(Supplier.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder).addNewTopLevelMenu(any());

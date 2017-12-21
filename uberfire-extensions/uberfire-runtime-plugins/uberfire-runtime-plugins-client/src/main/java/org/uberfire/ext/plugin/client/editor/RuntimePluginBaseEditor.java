@@ -17,6 +17,8 @@
 package org.uberfire.ext.plugin.client.editor;
 
 import java.util.Collection;
+import java.util.function.Supplier;
+
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -42,6 +44,7 @@ import org.uberfire.ext.plugin.event.PluginDeleted;
 import org.uberfire.ext.plugin.event.PluginRenamed;
 import org.uberfire.ext.plugin.event.PluginSaved;
 import org.uberfire.ext.plugin.event.PluginUnregistered;
+import org.uberfire.ext.plugin.model.Language;
 import org.uberfire.ext.plugin.model.Media;
 import org.uberfire.ext.plugin.model.Plugin;
 import org.uberfire.ext.plugin.model.PluginContent;
@@ -59,7 +62,7 @@ import static org.uberfire.ext.editor.commons.client.menu.MenuItems.DELETE;
 import static org.uberfire.ext.editor.commons.client.menu.MenuItems.RENAME;
 import static org.uberfire.ext.editor.commons.client.menu.MenuItems.SAVE;
 
-public abstract class RuntimePluginBaseEditor extends BaseEditor {
+public abstract class RuntimePluginBaseEditor extends BaseEditor<Plugin> {
 
     protected Plugin plugin;
 
@@ -78,6 +81,10 @@ public abstract class RuntimePluginBaseEditor extends BaseEditor {
     @Inject
     private SavePopUpPresenter savePopUpPresenter;
 
+    public RuntimePluginBaseEditor() {
+        // Zero-parameter constructor for CDI proxies
+    }
+
     protected RuntimePluginBaseEditor(final BaseEditorView baseView) {
         super(baseView);
     }
@@ -85,6 +92,11 @@ public abstract class RuntimePluginBaseEditor extends BaseEditor {
     protected abstract PluginType getPluginType();
 
     protected abstract ClientResourceType getResourceType();
+
+    @Override
+    protected Supplier<Plugin> getContentSupplier() {
+        return this::getContent;
+    }
 
     @OnStartup
     public void onStartup(final ObservablePath path,
@@ -125,7 +137,7 @@ public abstract class RuntimePluginBaseEditor extends BaseEditor {
         return pluginServices;
     }
 
-    protected Caller<? extends SupportsRename> getRenameServiceCaller() {
+    protected Caller<? extends SupportsRename<Plugin>> getRenameServiceCaller() {
         return pluginServices;
     }
 
@@ -158,13 +170,13 @@ public abstract class RuntimePluginBaseEditor extends BaseEditor {
         return versionRecordManager.getCurrentPath();
     }
 
-    public PluginSimpleContent getContent() {
+    public Plugin getContent() {
         return new PluginSimpleContent(view().getContent(),
                                        view().getTemplate(),
                                        view().getCss(),
                                        view().getCodeMap(),
                                        view().getFrameworks(),
-                                       view().getContent().getLanguage());
+                                       Language.JAVASCRIPT);
     }
 
     protected void save() {
@@ -193,7 +205,6 @@ public abstract class RuntimePluginBaseEditor extends BaseEditor {
     abstract RuntimePluginBaseView view();
 
     Caller<PluginServices> getPluginServices() {
-
         return pluginServices;
     }
 

@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Supplier;
+
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
@@ -29,7 +31,6 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.view.client.HasData;
 import com.google.gwt.view.client.ListDataProvider;
 import org.jboss.errai.common.client.api.Caller;
-import org.jboss.errai.common.client.api.RemoteCallback;
 import org.uberfire.backend.vfs.ObservablePath;
 import org.uberfire.client.annotations.WorkbenchEditor;
 import org.uberfire.client.annotations.WorkbenchMenu;
@@ -56,11 +57,9 @@ import org.uberfire.ext.plugin.model.DynamicMenu;
 import org.uberfire.ext.plugin.model.DynamicMenuItem;
 import org.uberfire.ext.plugin.model.Plugin;
 import org.uberfire.ext.plugin.model.PluginType;
-import org.uberfire.ext.plugin.service.PluginServices;
 import org.uberfire.lifecycle.OnMayClose;
 import org.uberfire.lifecycle.OnStartup;
 import org.uberfire.mvp.Command;
-import org.uberfire.mvp.ParameterizedCommand;
 import org.uberfire.mvp.PlaceRequest;
 import org.uberfire.workbench.events.NotificationEvent;
 import org.uberfire.workbench.model.menu.Menus;
@@ -72,13 +71,12 @@ import static org.uberfire.ext.editor.commons.client.menu.MenuItems.SAVE;
 
 @Dependent
 @WorkbenchEditor(identifier = "Dynamic Menu Editor", supportedTypes = {DynamicMenuResourceType.class}, priority = Integer.MAX_VALUE)
-public class DynamicMenuEditorPresenter
-        extends BaseEditor {
+public class DynamicMenuEditorPresenter extends BaseEditor<DynamicMenu> {
 
     @Inject
     private DynamicMenuResourceType resourceType;
-    @Inject
-    private Caller<PluginServices> pluginServices;
+    //    @Inject
+//    private Caller<PluginServices<DynamicMenu>> pluginServices;
     @Inject
     private Event<NotificationEvent> notification;
     @Inject
@@ -242,24 +240,29 @@ public class DynamicMenuEditorPresenter
 
     @Override
     protected void loadContent() {
-        getPluginServices().call(new RemoteCallback<DynamicMenu>() {
-
-            @Override
-            public void callback(final DynamicMenu response) {
-                setOriginalHash(response.hashCode());
-                menuItem = response;
-                getDynamicMenuItems().clear();
-                for (final DynamicMenuItem menuItem : response.getMenuItems()) {
-                    getDynamicMenuItems().add(menuItem);
-                }
-                baseView.hideBusyIndicator();
-            }
-        }).getDynamicMenuContent(getVersionRecordManager().getCurrentPath());
+//        getPluginServices().call(new RemoteCallback<DynamicMenu>() {
+//
+//            @Override
+//            public void callback(final DynamicMenu response) {
+//                setOriginalHash(response.hashCode());
+//                menuItem = response;
+//                getDynamicMenuItems().clear();
+//                for (final DynamicMenuItem menuItem : response.getMenuItems()) {
+//                    getDynamicMenuItems().add(menuItem);
+//                }
+//                baseView.hideBusyIndicator();
+//            }
+//        }).getDynamicMenuContent(getVersionRecordManager().getCurrentPath());
     }
 
-    Caller<PluginServices> getPluginServices() {
-        return pluginServices;
+    @Override
+    protected Supplier<DynamicMenu> getContentSupplier() {
+        return this::getContent;
     }
+
+//    Caller<PluginServices<DynamicMenu>> getPluginServices() {
+//        return pluginServices;
+//    }
 
     protected Command onValidate() {
         return new Command() {
@@ -294,18 +297,18 @@ public class DynamicMenuEditorPresenter
     }
 
     protected void save() {
-        savePopUpPresenter.show(versionRecordManager.getCurrentPath(),
-                                new ParameterizedCommand<String>() {
-
-                                    @Override
-                                    public void execute(final String commitMessage) {
-                                        getPluginServices().call(getSaveSuccessCallback(getContent().hashCode())).saveMenu(
-                                                getContent(),
-                                                commitMessage);
-                                    }
-                                }
-        );
-        concurrentUpdateSessionInfo = null;
+//        savePopUpPresenter.show(versionRecordManager.getCurrentPath(),
+//                                new ParameterizedCommand<String>() {
+//
+//                                    @Override
+//                                    public void execute(final String commitMessage) {
+//                                        getPluginServices().call(getSaveSuccessCallback(getContent().hashCode())).saveMenu(
+//                                                getContent(),
+//                                                commitMessage);
+//                                    }
+//                                }
+//        );
+//        concurrentUpdateSessionInfo = null;
     }
 
     @WorkbenchPartView
@@ -322,7 +325,7 @@ public class DynamicMenuEditorPresenter
         return new DynamicMenu(menuItem.getName(),
                                PluginType.DYNAMIC_MENU,
                                versionRecordManager.getCurrentPath(),
-                               new ArrayList<DynamicMenuItem>(getDynamicMenuItems()));
+                               new ArrayList<>(getDynamicMenuItems()));
     }
 
     @Override
@@ -336,15 +339,18 @@ public class DynamicMenuEditorPresenter
     }
 
     protected Caller<? extends SupportsDelete> getDeleteServiceCaller() {
-        return getPluginServices();
+        return null;
+//        return getPluginServices();
     }
 
-    protected Caller<? extends SupportsRename> getRenameServiceCaller() {
-        return getPluginServices();
+    protected Caller<? extends SupportsRename<DynamicMenu>> getRenameServiceCaller() {
+        return null;
+//        return getPluginServices();
     }
 
     protected Caller<? extends SupportsCopy> getCopyServiceCaller() {
-        return getPluginServices();
+        return null;
+//        return getPluginServices();
     }
 
     public View getView() {
