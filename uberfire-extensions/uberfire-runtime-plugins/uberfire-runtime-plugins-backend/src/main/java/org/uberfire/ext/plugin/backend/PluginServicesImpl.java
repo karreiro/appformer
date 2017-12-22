@@ -623,7 +623,6 @@ public class PluginServicesImpl implements PluginServices {
                                                        final Plugin content,
                                                        final String comment) {
 
-        // TODO: check looks and another save verifications
         save(content, comment);
 
         return rename(content.getPath(), newFileName, comment);

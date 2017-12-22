@@ -126,8 +126,14 @@ public class PerspectiveServicesImpl implements PerspectiveServices {
     }
 
     @Override
-    public Path saveAndRename(final Path context, final String newFileName, final LayoutTemplate content, final String comment) {
-        return context;
+    public Path saveAndRename(final Path path,
+                              final String newName,
+                              final LayoutTemplate content,
+                              final String comment) {
+
+        saveLayoutTemplate(path, content, comment);
+
+        return rename(path, newName, comment);
     }
 
     @Override

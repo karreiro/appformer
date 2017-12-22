@@ -27,10 +27,9 @@ import org.uberfire.ext.layout.editor.api.editor.LayoutTemplate;
 import org.uberfire.ext.plugin.model.Plugin;
 
 @Remote
-public interface PerspectiveServices
-        extends SupportsCopy,
-                SupportsRename<LayoutTemplate>,
-                SupportsDelete {
+public interface PerspectiveServices extends SupportsCopy,
+                                             SupportsDelete,
+                                             SupportsRename<LayoutTemplate> {
 
     Plugin createNewPerspective(String name, LayoutTemplate.Style style);
 

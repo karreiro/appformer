@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Supplier;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -174,22 +173,27 @@ public class BpmnServiceImpl implements BpmnService {
                               final String newFileName,
                               final ProcessNode content,
                               final String comment) {
-        try {
 
-            ioService.write(Paths.convert(path),
-                            BpmnPersistence.getInstance().marshal(content),
-                            MetadataFactory.makeMetadata(null),
-                            CommentedOptionFactory.makeCommentedOption(identity,
-                                                                       sessionInfo,
-                                                                       comment));
+        /* Empty: This service is not being used by any screen. */
 
+        //        try {
+        //
+        //            ioService.write(Paths.convert(path),
+        //                            BpmnPersistence.getInstance().marshal(content),
+        //                            MetadataFactory.makeMetadata(null),
+        //                            CommentedOptionFactory.makeCommentedOption(identity,
+        //                                                                       sessionInfo,
+        //                                                                       comment));
+        //
+        //
+        //            return renameService.rename(path,
+        //                                        newFileName,
+        //                                        comment);
+        //        } catch (Exception e) {
+        //            throw ExceptionUtilities.handleException(e);
+        //        }
 
-            return renameService.rename(path,
-                                        newFileName,
-                                        comment);
-        } catch (Exception e) {
-            throw ExceptionUtilities.handleException(e);
-        }
+        return path;
     }
 
     @Override
