@@ -17,7 +17,7 @@
 package org.uberfire.ext.editor.commons.backend.service;
 
 import java.util.Collection;
-import javax.enterprise.context.ApplicationScoped;
+
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,7 +39,6 @@ import org.uberfire.java.nio.file.Files;
 import org.uberfire.rpc.SessionInfo;
 
 @Service
-@ApplicationScoped
 public class RenameServiceImpl implements RenameService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RenameServiceImpl.class);

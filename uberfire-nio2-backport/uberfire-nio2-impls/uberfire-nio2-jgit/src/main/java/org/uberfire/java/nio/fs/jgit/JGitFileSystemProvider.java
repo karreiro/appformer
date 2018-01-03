@@ -802,14 +802,17 @@ public class JGitFileSystemProvider implements SecuredFileSystemProvider,
         return path;
     }
 
-    private String buildPathFrom(URI uri,
-                                 JGitFileSystem fileSystem,
-                                 String host) {
+    String buildPathFrom(URI uri,
+                         JGitFileSystem fileSystem,
+                         String host) {
         String pathStr = uri.toString();
         pathStr = pathStr.replace(host,
                                   "");
-        pathStr = pathStr.replace(fileSystem.getName(),
-                                  "");
+
+        final String pathWithoutFileExtension = pathWithoutFileExtension(pathStr);
+        final String fileExtension = fileExtension(pathStr);
+
+        pathStr = pathWithoutFileExtension.replace(fileSystem.getName(), "") + fileExtension;
         pathStr = pathStr.replace("git://",
                                              "").replace("default://",
                                                          "");
@@ -818,6 +821,15 @@ public class JGitFileSystemProvider implements SecuredFileSystemProvider,
             pathStr = pathStr.substring(2);
         }
         return pathStr;
+    }
+
+    String pathWithoutFileExtension(final String path) {
+
+        return path.replaceAll("\\.[^\\.]*$", "");
+    }
+
+    String fileExtension(final String path) {
+        return path.lastIndexOf(".") > 0 ? path.substring(path.lastIndexOf(".")) : "";
     }
 
     private String buildHostFrom(JGitFileSystem fileSystem,

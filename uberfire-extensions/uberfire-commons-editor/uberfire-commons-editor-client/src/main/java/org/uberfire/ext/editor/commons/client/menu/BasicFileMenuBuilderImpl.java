@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -37,11 +39,13 @@ import org.uberfire.ext.editor.commons.client.file.popups.CopyPopUpPresenter;
 import org.uberfire.ext.editor.commons.client.file.popups.DeletePopUpPresenter;
 import org.uberfire.ext.editor.commons.client.file.popups.RenamePopUpPresenter;
 import org.uberfire.ext.editor.commons.client.menu.HasLockSyncMenuStateHelper.LockSyncMenuStateHelper.Operation;
+import org.uberfire.ext.editor.commons.client.menu.common.SaveAndRenameCommandFactory;
 import org.uberfire.ext.editor.commons.client.resources.i18n.CommonConstants;
 import org.uberfire.ext.editor.commons.client.validation.Validator;
 import org.uberfire.ext.editor.commons.service.support.SupportsCopy;
 import org.uberfire.ext.editor.commons.service.support.SupportsDelete;
 import org.uberfire.ext.editor.commons.service.support.SupportsRename;
+import org.uberfire.ext.editor.commons.service.support.SupportsSaveAndRename;
 import org.uberfire.ext.widgets.common.client.callbacks.HasBusyIndicatorDefaultErrorCallback;
 import org.uberfire.ext.widgets.common.client.common.BusyIndicatorView;
 import org.uberfire.mvp.Command;
@@ -53,7 +57,7 @@ import org.uberfire.workbench.model.menu.Menus;
 
 import static org.uberfire.workbench.model.menu.MenuFactory.newSimpleItem;
 
-public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
+public class BasicFileMenuBuilderImpl<T, M> implements BasicFileMenuBuilder<T, M> {
 
     private RestoreVersionCommandProvider restoreVersionCommandProvider;
     private Event<NotificationEvent> notification;
@@ -75,6 +79,7 @@ public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
     private List<MenuItem> topLevelMenus = new ArrayList<MenuItem>();
     private List<MenuItem> menuItemsSyncedWithLockState = new ArrayList<MenuItem>();
     private LockSyncMenuStateHelper lockSyncMenuStateHelper = new BasicFileMenuBuilder.BasicLockSyncMenuStateHelper();
+    private SaveAndRenameCommandFactory<T, M> saveAndRenameCommandFactory;
 
     @Inject
     public BasicFileMenuBuilderImpl(final DeletePopUpPresenter deletePopUpPresenter,
@@ -82,13 +87,15 @@ public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
                                     final RenamePopUpPresenter renamePopUpPresenter,
                                     final BusyIndicatorView busyIndicatorView,
                                     final Event<NotificationEvent> notification,
-                                    final RestoreVersionCommandProvider restoreVersionCommandProvider) {
+                                    final RestoreVersionCommandProvider restoreVersionCommandProvider,
+                                    final SaveAndRenameCommandFactory<T, M> saveAndRenameCommandFactory) {
         this.deletePopUpPresenter = deletePopUpPresenter;
         this.copyPopUpPresenter = copyPopUpPresenter;
         this.renamePopUpPresenter = renamePopUpPresenter;
         this.busyIndicatorView = busyIndicatorView;
         this.notification = notification;
         this.restoreVersionCommandProvider = restoreVersionCommandProvider;
+        this.saveAndRenameCommandFactory = saveAndRenameCommandFactory;
     }
 
     @Override
@@ -193,6 +200,24 @@ public class BasicFileMenuBuilderImpl implements BasicFileMenuBuilder {
                                       validator,
                                       command);
         });
+    }
+
+    @Override
+    public BasicFileMenuBuilder addRename(final Path path,
+                                          final Validator validator,
+                                          final Caller<? extends SupportsSaveAndRename<T, M>> renameCaller,
+                                          final M metadata,
+                                          final Supplier<T> contentSupplier,
+                                          final Supplier<Boolean> isDirtySupplier) {
+
+        final Command command = saveAndRenameCommandFactory.create(path,
+                                                                   validator,
+                                                                   renameCaller,
+                                                                   metadata,
+                                                                   contentSupplier,
+                                                                   isDirtySupplier);
+
+        return addRename(command);
     }
 
     @Override

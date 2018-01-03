@@ -26,6 +26,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.uberfire.backend.vfs.Path;
+import org.uberfire.ext.editor.commons.backend.service.SaveAndRenameServiceImpl;
+import org.uberfire.ext.editor.commons.file.Metadata;
 import org.uberfire.ext.layout.editor.api.editor.LayoutTemplate;
 import org.uberfire.ext.plugin.backend.PluginServicesImpl;
 import org.uberfire.ext.plugin.model.LayoutEditorModel;
@@ -43,6 +45,9 @@ public class PerspectiveServicesImplTest {
 
     @Mock
     LayoutServicesImpl layoutServices;
+
+    @Mock
+    SaveAndRenameServiceImpl<LayoutTemplate, Metadata> saveAndRenameService;
 
     @Mock
     Path path;
@@ -66,7 +71,7 @@ public class PerspectiveServicesImplTest {
         when(pluginServices.rename(any(), anyString(), anyString())).thenReturn(path2);
         when(pluginServices.getLayoutEditor(eq(path2), eq(PluginType.PERSPECTIVE_LAYOUT))).thenReturn(layoutEditorModel);
 
-        perspectiveServices = new PerspectiveServicesImpl(pluginServices, layoutServices);
+        perspectiveServices = new PerspectiveServicesImpl(pluginServices, layoutServices, saveAndRenameService);
     }
 
     @Test

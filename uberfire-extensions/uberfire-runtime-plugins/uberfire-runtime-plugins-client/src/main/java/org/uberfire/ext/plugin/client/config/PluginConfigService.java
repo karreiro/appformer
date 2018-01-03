@@ -34,12 +34,10 @@ public class PluginConfigService {
 
     @PostConstruct
     public void init() {
-        pluginServices.call(new RemoteCallback<String>() {
-            @Override
-            public void callback(final String response) {
-                mediaServletURI = response;
-            }
-        }).getMediaServletURI();
+
+        final RemoteCallback<String> remoteCallback = (final String response) -> mediaServletURI = response;
+
+        pluginServices.call(remoteCallback).getMediaServletURI();
     }
 
     public String getMediaServletURI() {

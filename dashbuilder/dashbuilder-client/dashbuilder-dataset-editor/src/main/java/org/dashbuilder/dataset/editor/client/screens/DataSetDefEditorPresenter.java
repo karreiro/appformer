@@ -47,6 +47,7 @@ import org.uberfire.client.mvp.PlaceManager;
 import org.uberfire.client.workbench.events.ChangeTitleWidgetEvent;
 import org.uberfire.client.workbench.widgets.common.ErrorPopupPresenter;
 import org.uberfire.ext.editor.commons.client.BaseEditor;
+import org.uberfire.ext.editor.commons.file.Metadata;
 import org.uberfire.ext.editor.commons.client.file.popups.SavePopUpPresenter;
 import org.uberfire.ext.editor.commons.service.support.SupportsCopy;
 import org.uberfire.ext.editor.commons.service.support.SupportsDelete;
@@ -64,15 +65,17 @@ import javax.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.kie.soup.commons.validation.PortablePreconditions.checkNotNull;
+import static org.uberfire.ext.editor.commons.file.Metadata.*;
 import static org.uberfire.ext.editor.commons.client.menu.MenuItems.*;
 import static org.uberfire.workbench.events.NotificationEvent.NotificationType.ERROR;
 import static org.uberfire.workbench.events.NotificationEvent.NotificationType.SUCCESS;
 
 @Dependent
 @WorkbenchEditor(identifier = "DataSetDefEditor", supportedTypes = {DataSetDefType.class}, priority = Integer.MAX_VALUE)
-public class DataSetDefEditorPresenter extends BaseEditor {
+public class DataSetDefEditorPresenter extends BaseEditor<DataSetDef, Metadata> {
 
     @Inject
     SyncBeanManager beanManager;
@@ -157,6 +160,16 @@ public class DataSetDefEditorPresenter extends BaseEditor {
             // Edit only the definition, so user can fix the wrong attributes, if any.
             loadDefinition();
         }
+    }
+
+    @Override
+    protected Supplier<DataSetDef> getContentSupplier() {
+        return this::getDataSetDef;
+    }
+
+    @Override
+    protected Metadata getMetadata() {
+        return NO_METADATA;
     }
 
     private void loadDefinition() {

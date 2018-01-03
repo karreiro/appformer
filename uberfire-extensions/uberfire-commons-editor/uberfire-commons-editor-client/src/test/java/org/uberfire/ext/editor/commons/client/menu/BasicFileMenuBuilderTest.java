@@ -23,15 +23,17 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.mvp.UpdatedLockStatusEvent;
+import org.uberfire.ext.editor.commons.file.Metadata;
 import org.uberfire.ext.editor.commons.client.file.popups.CopyPopUpPresenter;
 import org.uberfire.ext.editor.commons.client.file.popups.DeletePopUpPresenter;
 import org.uberfire.ext.editor.commons.client.file.popups.RenamePopUpPresenter;
 import org.uberfire.ext.editor.commons.client.history.SaveButton;
 import org.uberfire.ext.editor.commons.client.menu.HasLockSyncMenuStateHelper.LockSyncMenuStateHelper.Operation;
+import org.uberfire.ext.editor.commons.client.menu.common.SaveAndRenameCommandFactory;
 import org.uberfire.ext.editor.commons.client.validation.Validator;
 import org.uberfire.ext.editor.commons.service.support.SupportsCopy;
 import org.uberfire.ext.editor.commons.service.support.SupportsDelete;
-import org.uberfire.ext.editor.commons.service.support.SupportsRename;
+import org.uberfire.ext.editor.commons.service.support.SupportsSaveAndRename;
 import org.uberfire.ext.widgets.common.client.common.BusyIndicatorView;
 import org.uberfire.mocks.CallerMock;
 import org.uberfire.mocks.EventSourceMock;
@@ -41,8 +43,14 @@ import org.uberfire.workbench.model.menu.MenuItem;
 import org.uberfire.workbench.model.menu.MenuItemCommand;
 import org.uberfire.workbench.model.menu.Menus;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(GwtMockitoTestRunner.class)
 public class BasicFileMenuBuilderTest {
@@ -75,28 +83,32 @@ public class BasicFileMenuBuilderTest {
     private RenamePopUpPresenter renamePopUpPresenter;
 
     @Mock
+    private SaveAndRenameCommandFactory<String, Metadata> saveAndRenameCommandFactory;
+
+    @Mock
     private SupportsDelete deleteService;
     private CallerMock<SupportsDelete> deleteCaller;
 
     @Mock
-    private SupportsRename renameService;
+    private SupportsSaveAndRename<String, Metadata> renameService;
 
-    private CallerMock<SupportsRename> renameCaller;
+    private CallerMock<SupportsSaveAndRename<String, Metadata>> renameCaller;
 
     @Mock
     private SupportsCopy copyService;
     private CallerMock<SupportsCopy> copyCaller;
 
-    private BasicFileMenuBuilderImpl builder;
+    private BasicFileMenuBuilderImpl<String, Metadata> builder;
 
     @Before
     public void setup() {
-        builder = new BasicFileMenuBuilderImpl(deletePopUpPresenter,
-                                               copyPopUpPresenter,
-                                               renamePopUpPresenter,
-                                               busyIndicatorView,
-                                               notification,
-                                               restoreVersionCommandProvider);
+        builder = new BasicFileMenuBuilderImpl<>(deletePopUpPresenter,
+                                                 copyPopUpPresenter,
+                                                 renamePopUpPresenter,
+                                                 busyIndicatorView,
+                                                 notification,
+                                                 restoreVersionCommandProvider,
+                                                 saveAndRenameCommandFactory);
         deleteCaller = new CallerMock<>(deleteService);
         renameCaller = new CallerMock<>(renameService);
         when(provider.getPath()).thenReturn(mockPath);
