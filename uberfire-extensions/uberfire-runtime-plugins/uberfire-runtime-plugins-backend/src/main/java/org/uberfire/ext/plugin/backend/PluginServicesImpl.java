@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
@@ -42,7 +43,9 @@ import org.jboss.errai.bus.server.annotations.Service;
 import org.jboss.errai.security.shared.api.identity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.uberfire.ext.editor.commons.backend.service.SaveAndRenameServiceImpl;
 import org.uberfire.ext.editor.commons.backend.validation.DefaultFileNameValidator;
+import org.uberfire.ext.editor.commons.file.Metadata;
 import org.uberfire.ext.plugin.event.MediaDeleted;
 import org.uberfire.ext.plugin.event.PluginAdded;
 import org.uberfire.ext.plugin.event.PluginDeleted;
@@ -114,6 +117,8 @@ public class PluginServicesImpl implements PluginServices {
     private DefaultFileNameValidator defaultFileNameValidator;
     @Inject
     private User identity;
+    @Inject
+    private SaveAndRenameServiceImpl<Plugin, Metadata> saveAndRenameService;
     private FileSystem fileSystem;
     private Path root;
 
@@ -133,6 +138,8 @@ public class PluginServicesImpl implements PluginServices {
         }
 
         this.root = fileSystem.getRootDirectories().iterator().next();
+
+        saveAndRenameService.init(this);
     }
 
     @Override
@@ -324,48 +331,53 @@ public class PluginServicesImpl implements PluginServices {
     }
 
     @Override
-    public org.uberfire.backend.vfs.Path save(final PluginSimpleContent plugin,
+    public org.uberfire.backend.vfs.Path save(final Plugin plugin,
                                               final String commitMessage) {
 
-        final Path pluginPath = convert(plugin.getPath());
+        if (!(plugin instanceof PluginSimpleContent)) {
+            return null;
+        }
+
+        final PluginSimpleContent pluginSimpleContent = (PluginSimpleContent) plugin;
+        final Path pluginPath = convert(pluginSimpleContent.getPath());
         final boolean isNewPlugin = !getIoService().exists(pluginPath);
 
         try {
             getIoService().startBatch(fileSystem,
                                       commentedOption(commitMessage));
 
-            saveCodeMap(plugin.getName(),
-                        plugin.getCodeMap());
+            saveCodeMap(pluginSimpleContent.getName(),
+                        pluginSimpleContent.getCodeMap());
 
-            if (plugin.getTemplate() != null) {
-                getIoService().write(getTemplatePath(getPluginPath(plugin.getName())),
-                                     plugin.getTemplate());
+            if (pluginSimpleContent.getTemplate() != null) {
+                getIoService().write(getTemplatePath(getPluginPath(pluginSimpleContent.getName())),
+                                     pluginSimpleContent.getTemplate());
             }
 
-            if (plugin.getCss() != null) {
-                getIoService().write(getCssPath(getPluginPath(plugin.getName())),
-                                     plugin.getCss());
+            if (pluginSimpleContent.getCss() != null) {
+                getIoService().write(getCssPath(getPluginPath(pluginSimpleContent.getName())),
+                                     pluginSimpleContent.getCss());
             }
 
-            clearDirectory(getPluginPath(plugin.getName()).resolve("dependencies"));
+            clearDirectory(getPluginPath(pluginSimpleContent.getName()).resolve("dependencies"));
 
-            if (plugin.getFrameworks() != null && !plugin.getFrameworks().isEmpty()) {
-                final Framework framework = plugin.getFrameworks().iterator().next();
-                getIoService().write(getDependencyPath(getPluginPath(plugin.getName()),
+            if (pluginSimpleContent.getFrameworks() != null && !pluginSimpleContent.getFrameworks().isEmpty()) {
+                final Framework framework = pluginSimpleContent.getFrameworks().iterator().next();
+                getIoService().write(getDependencyPath(getPluginPath(pluginSimpleContent.getName()),
                                                        framework),
                                      "--");
             }
 
-            createRegistry(plugin);
+            createRegistry(pluginSimpleContent);
 
             updatePlugin(pluginPath,
-                         plugin,
+                         pluginSimpleContent,
                          isNewPlugin);
         } finally {
             getIoService().endBatch();
         }
 
-        return plugin.getPath();
+        return pluginSimpleContent.getPath();
     }
 
     private void clearDirectory(Path directory) {
@@ -543,7 +555,6 @@ public class PluginServicesImpl implements PluginServices {
                                               final String newName,
                                               final String comment) {
 
-
         return copy(path, newName, null, comment);
     }
 
@@ -560,9 +571,9 @@ public class PluginServicesImpl implements PluginServices {
 
         try {
             getIoService().startBatch(fileSystem,
-                    commentedOption(comment));
+                                      commentedOption(comment));
             getIoService().copy(convert(path).getParent(),
-                    newPath);
+                                newPath);
         } finally {
             getIoService().endBatch();
         }
@@ -573,7 +584,7 @@ public class PluginServicesImpl implements PluginServices {
         String registry = createRegistry(pluginContent);
 
         pluginAddedEvent.fire(new PluginAdded(pluginContent,
-                sessionInfo));
+                                              sessionInfo));
 
         return result;
     }
@@ -691,8 +702,8 @@ public class PluginServicesImpl implements PluginServices {
                                          fileContent);
         }
         return new LayoutEditorModel(pluginName,
-                PluginType.PERSPECTIVE_LAYOUT,
-                path, null).emptyLayout();
+                                     PluginType.PERSPECTIVE_LAYOUT,
+                                     path, null).emptyLayout();
     }
 
     @Override
@@ -842,5 +853,22 @@ public class PluginServicesImpl implements PluginServices {
 
     private Path getMenuItemsPath(final Path rootPlugin) {
         return rootPlugin.resolve("info.dynamic");
+    }
+
+    @Override
+    public org.uberfire.backend.vfs.Path save(final org.uberfire.backend.vfs.Path _path,
+                                              final Plugin content,
+                                              final Metadata _metadata,
+                                              final String comment) {
+        return save(content, comment);
+    }
+
+    @Override
+    public org.uberfire.backend.vfs.Path saveAndRename(final org.uberfire.backend.vfs.Path path,
+                                                       final String newFileName,
+                                                       final Metadata metadata,
+                                                       final Plugin content,
+                                                       final String comment) {
+        return saveAndRenameService.saveAndRename(path, newFileName, metadata, content, comment);
     }
 }

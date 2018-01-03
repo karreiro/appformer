@@ -15,17 +15,20 @@
  */
 package org.uberfire.ext.editor.commons.client.menu;
 
+import java.util.function.Supplier;
+
 import org.jboss.errai.common.client.api.Caller;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.ext.editor.commons.client.validation.Validator;
 import org.uberfire.ext.editor.commons.service.support.SupportsCopy;
 import org.uberfire.ext.editor.commons.service.support.SupportsDelete;
 import org.uberfire.ext.editor.commons.service.support.SupportsRename;
+import org.uberfire.ext.editor.commons.service.support.SupportsSaveAndRename;
 import org.uberfire.mvp.Command;
 import org.uberfire.workbench.model.menu.MenuItem;
 import org.uberfire.workbench.model.menu.Menus;
 
-public interface BasicFileMenuBuilder extends HasLockSyncMenuStateHelper {
+public interface BasicFileMenuBuilder<T, M> extends HasLockSyncMenuStateHelper {
 
     Menus build();
 
@@ -57,6 +60,13 @@ public interface BasicFileMenuBuilder extends HasLockSyncMenuStateHelper {
     BasicFileMenuBuilder addRename(final Path path,
                                    final Validator validator,
                                    final Caller<? extends SupportsRename> renameCaller);
+
+    BasicFileMenuBuilder addRename(final Path path,
+                                   final Validator validator,
+                                   final Caller<? extends SupportsSaveAndRename<T, M>> renameCaller,
+                                   final M metadata,
+                                   final Supplier<T> contentSupplier,
+                                   final Supplier<Boolean> isDirtySupplier);
 
     BasicFileMenuBuilder addRename(final PathProvider provider,
                                    final Validator validator,
