@@ -23,6 +23,7 @@ import org.uberfire.client.mvp.UberElement;
 import org.uberfire.ext.editor.commons.client.htmleditor.HtmlEditorPresenter;
 import org.uberfire.ext.layout.editor.client.api.ModalConfigurationContext;
 import org.uberfire.ext.plugin.client.perspective.editor.layout.editor.HTMLLayoutDragComponent;
+import org.uberfire.mvp.Command;
 
 @Dependent
 public class EditHTMLPresenter {
@@ -40,6 +41,7 @@ public class EditHTMLPresenter {
 
     public void init(final ModalConfigurationContext modalConfigurationContext) {
         this.modalConfigurationContext = modalConfigurationContext;
+
         setupHTMLEditor();
         view.init(this);
     }
@@ -60,11 +62,13 @@ public class EditHTMLPresenter {
     }
 
     void closeClick() {
+        destroyHtmlEditor();
         modalConfigurationContext.configurationCancelled();
     }
 
     void cancelClick() {
         view.hide();
+        destroyHtmlEditor();
         modalConfigurationContext.configurationCancelled();
     }
 
@@ -72,7 +76,12 @@ public class EditHTMLPresenter {
         view.hide();
         modalConfigurationContext.setComponentProperty(HTMLLayoutDragComponent.HTML_CODE_PARAMETER,
                                                        htmlEditor.getContent());
+        destroyHtmlEditor();
         modalConfigurationContext.configurationFinished();
+    }
+
+    public void destroyHtmlEditor() {
+        htmlEditor.destroy();
     }
 
     public HtmlEditorPresenter.View getHtmlEditorView() {
