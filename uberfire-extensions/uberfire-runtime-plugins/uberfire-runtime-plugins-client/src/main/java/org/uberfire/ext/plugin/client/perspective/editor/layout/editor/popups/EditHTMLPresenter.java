@@ -62,7 +62,6 @@ public class EditHTMLPresenter {
     }
 
     void closeClick() {
-        destroyHtmlEditor();
         modalConfigurationContext.configurationCancelled();
     }
 
