@@ -256,11 +256,16 @@ public class HtmlEditorView implements HtmlEditorPresenter.View,
     }
 
     public final native void synchronizeView() /*-{
-        var editor = this.@org.uberfire.ext.editor.commons.client.htmleditor.HtmlEditorView::jsEditor;
 
-        if (editor.currentView == "source") {
-            editor.fire("change_view", "composer");
-        }
+            var editor = this.@org.uberfire.ext.editor.commons.client.htmleditor.HtmlEditorView::jsEditor;
+
+try {
+            if (editor.currentView == "source") {
+                editor.fire("change_view", "composer");
+            }
+            } catch(e) {
+                // Ignore.
+            }
     }-*/;
 
     protected void configureScreenComponents(final String editorId,
