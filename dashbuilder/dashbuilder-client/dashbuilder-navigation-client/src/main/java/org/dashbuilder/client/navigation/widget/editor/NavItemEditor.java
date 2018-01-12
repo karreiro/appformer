@@ -600,8 +600,15 @@ public abstract class NavItemEditor implements IsElement {
             if (dividerRequired) {
                 view.addCommandDivider();
             }
-            dividerRequired = true;
-            this.addCommand(view.i18nGotoItem(getPerspectiveLiteral()), this::gotoPerspectiveCommand);
+            Command command = new Command() {
+                @Override
+                public void execute() {
+                    gotoPerspectiveCommand();
+                }
+            };
+            String perspectiveLiteral = getPerspectiveLiteral();
+            String name = view.i18nGotoItem(perspectiveLiteral);
+            this.addCommand(name, command);
         }
     }
 
