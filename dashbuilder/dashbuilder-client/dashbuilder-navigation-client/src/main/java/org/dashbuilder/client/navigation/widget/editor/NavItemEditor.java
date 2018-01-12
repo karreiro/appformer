@@ -572,7 +572,12 @@ public abstract class NavItemEditor implements IsElement {
             }
             boolean newPerspectiveEnabled = isNewPerspectiveEnabled();
             if (newPerspectiveEnabled) {
-                this.addCommand(view.i18nNewItem(getPerspectiveLiteral()), this::newPerspective);
+                this.addCommand(view.i18nNewItem(getPerspectiveLiteral()), new Command() {
+                    @Override
+                    public void execute() {
+                        newPerspective();
+                    }
+                });
                 dividerRequired = true;
             }
         }
