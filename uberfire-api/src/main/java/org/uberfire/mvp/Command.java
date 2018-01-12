@@ -23,6 +23,7 @@ import jsinterop.annotations.JsType;
  * structures when a WorkbenchPart is embedded within Eclipse.
  */
 @JsType
+@FunctionalInterface
 public interface Command {
 
     public void execute();
