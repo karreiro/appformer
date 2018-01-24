@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.enterprise.event.Event;
 import javax.enterprise.inject.Instance;
 
@@ -36,7 +37,9 @@ import org.mockito.Spy;
 import org.uberfire.backend.server.util.Paths;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.backend.vfs.PathFactory;
+import org.uberfire.ext.editor.commons.backend.service.SaveAndRenameServiceImpl;
 import org.uberfire.ext.editor.commons.backend.validation.DefaultFileNameValidator;
+import org.uberfire.ext.editor.commons.file.DefaultMetadata;
 import org.uberfire.ext.plugin.event.MediaDeleted;
 import org.uberfire.ext.plugin.event.PluginAdded;
 import org.uberfire.ext.plugin.event.PluginDeleted;
@@ -44,6 +47,7 @@ import org.uberfire.ext.plugin.event.PluginRenamed;
 import org.uberfire.ext.plugin.event.PluginSaved;
 import org.uberfire.ext.plugin.exception.PluginAlreadyExists;
 import org.uberfire.ext.plugin.model.CodeType;
+import org.uberfire.ext.plugin.model.DynamicMenu;
 import org.uberfire.ext.plugin.model.Framework;
 import org.uberfire.ext.plugin.model.LayoutEditorModel;
 import org.uberfire.ext.plugin.model.Plugin;
@@ -56,8 +60,17 @@ import org.uberfire.java.nio.file.FileSystem;
 import org.uberfire.mocks.FileSystemTestingUtils;
 import org.uberfire.rpc.SessionInfo;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class PluginServicesImplTest {
 
@@ -86,6 +99,9 @@ public class PluginServicesImplTest {
 
     @Spy
     private DefaultFileNameValidator defaultFileNameValidator;
+
+    @Mock
+    private SaveAndRenameServiceImpl<Plugin, DefaultMetadata> saveAndRenameService;
 
     @Mock
     private User identity;
@@ -200,42 +216,42 @@ public class PluginServicesImplTest {
     @Test
     public void testCopyPluginToAnotherDirectory() {
         Path pluginPath = createPlugin("emptyScreen",
-                PluginType.SCREEN,
-                null);
+                                       PluginType.SCREEN,
+                                       null);
 
         Plugin targetPlugin = buildPlugin("newEmptyScreen",
-                PluginType.SCREEN,
-                null);
+                                          PluginType.SCREEN,
+                                          null);
 
         Path targetDir = Paths.convert(Paths.convert(targetPlugin.getPath()).getParent());
         Path resultPath = pluginServices.copy(pluginPath,
-                "newEmptyScreen",
-                targetDir,
-                "");
+                                              "newEmptyScreen",
+                                              targetDir,
+                                              "");
 
         assertEquals(Paths.convert(resultPath), Paths.convert(targetPlugin.getPath()));
         verify(pluginAddedEvent,
-                times(1)).fire(any(PluginAdded.class));
+               times(1)).fire(any(PluginAdded.class));
 
         Collection<RuntimePlugin> runtimePlugins = pluginServices.listRuntimePlugins();
         assertEquals(2,
-                runtimePlugins.size());
+                     runtimePlugins.size());
         assertTrue(contains(runtimePlugins,
-                "emptyScreen"));
+                            "emptyScreen"));
         assertTrue(contains(runtimePlugins,
-                "newEmptyScreen"));
+                            "newEmptyScreen"));
     }
 
     @Test(expected = FileAlreadyExistsException.class)
     public void testCopyPluginAlreadyExists() {
         Path pluginPath = createPlugin("emptyScreen",
-                PluginType.SCREEN,
-                null);
+                                       PluginType.SCREEN,
+                                       null);
 
         pluginServices.copy(pluginPath,
-                "emptyScreen",
-                pluginPath,
-                "");
+                            "emptyScreen",
+                            pluginPath,
+                            "");
     }
 
     @Test
@@ -276,13 +292,71 @@ public class PluginServicesImplTest {
     @Test
     public void testLoadEmptyLayout() {
         Path pluginPath = createPlugin("emptyLayout",
-                PluginType.PERSPECTIVE_LAYOUT,
-                null);
+                                       PluginType.PERSPECTIVE_LAYOUT,
+                                       null);
 
         LayoutEditorModel layoutEditorModel = pluginServices.getLayoutEditor(pluginPath, PluginType.PERSPECTIVE_LAYOUT);
         assertEquals(layoutEditorModel.getName(), "emptyLayout");
         assertEquals(layoutEditorModel.getPath(), pluginPath);
         assertTrue(layoutEditorModel.isEmptyLayout());
+    }
+
+    @Test
+    public void testSimpleSaveWithPluginSimpleContent() {
+
+        final org.uberfire.backend.vfs.Path expected = mock(org.uberfire.backend.vfs.Path.class);
+        final PluginSimpleContent content = mock(PluginSimpleContent.class);
+        final String comment = "comment";
+
+        doReturn(expected).when(pluginServices).save(content, comment);
+
+        final Path actual = pluginServices.save((Plugin) content, comment);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testSimpleSaveWithoutPluginSimpleContent() {
+
+        final DynamicMenu content = mock(DynamicMenu.class);
+        final String comment = "comment";
+
+        final Path actual = pluginServices.save(content, comment);
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testSave() {
+
+        final org.uberfire.backend.vfs.Path expected = mock(org.uberfire.backend.vfs.Path.class);
+        final org.uberfire.backend.vfs.Path path = mock(org.uberfire.backend.vfs.Path.class);
+        final DefaultMetadata metadata = mock(DefaultMetadata.class);
+        final PluginSimpleContent content = mock(PluginSimpleContent.class);
+        final String comment = "comment";
+
+        doReturn(expected).when(pluginServices).save(content, comment);
+
+        final Path actual = pluginServices.save(path, content, metadata, comment);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testSaveAndRename() {
+
+        final org.uberfire.backend.vfs.Path expected = mock(org.uberfire.backend.vfs.Path.class);
+        final org.uberfire.backend.vfs.Path path = mock(org.uberfire.backend.vfs.Path.class);
+        final String newFileName = "newFileName";
+        final DefaultMetadata metadata = mock(DefaultMetadata.class);
+        final PluginSimpleContent content = mock(PluginSimpleContent.class);
+        final String comment = "comment";
+
+        doReturn(expected).when(saveAndRenameService).saveAndRename(path, newFileName, metadata, content, comment);
+
+        final Path actual = pluginServices.saveAndRename(path, newFileName, metadata, content, comment);
+
+        assertEquals(expected, actual);
     }
 
     private Path createPlugin(String name,

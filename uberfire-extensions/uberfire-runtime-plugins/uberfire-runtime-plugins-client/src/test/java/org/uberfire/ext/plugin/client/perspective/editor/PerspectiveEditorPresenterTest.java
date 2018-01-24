@@ -17,6 +17,7 @@ package org.uberfire.ext.plugin.client.perspective.editor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.jboss.errai.common.client.api.Caller;
@@ -32,7 +33,11 @@ import org.uberfire.backend.vfs.ObservablePath;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.ext.editor.commons.client.history.VersionRecordManager;
 import org.uberfire.ext.editor.commons.client.menu.BasicFileMenuBuilder;
+import org.uberfire.ext.editor.commons.client.menu.common.SaveAndRenameCommandFactory;
 import org.uberfire.ext.editor.commons.client.validation.Validator;
+import org.uberfire.ext.editor.commons.file.DefaultMetadata;
+import org.uberfire.ext.layout.editor.api.PerspectiveServices;
+import org.uberfire.ext.layout.editor.api.editor.LayoutTemplate;
 import org.uberfire.ext.layout.editor.client.LayoutEditorPresenter;
 import org.uberfire.ext.layout.editor.client.api.LayoutDragComponentGroup;
 import org.uberfire.ext.layout.editor.client.api.LayoutEditorPlugin;
@@ -83,6 +88,12 @@ public class PerspectiveEditorPresenterTest {
 
     @Mock
     LayoutEditorPresenter layoutEditorPresenter;
+
+    @Mock
+    Caller<PerspectiveServices> perspectiveServices;
+
+    @Mock
+    SaveAndRenameCommandFactory<LayoutTemplate, DefaultMetadata> saveAndRenameCommandFactory;
 
     @InjectMocks
     PerspectiveEditorPresenter presenter;
@@ -154,7 +165,7 @@ public class PerspectiveEditorPresenterTest {
 
         verify(menuBuilder).addSave(any(Command.class));
         verify(menuBuilder).addCopy(any(Path.class), any(Validator.class), any(Caller.class));
-        verify(menuBuilder).addRename(any(Path.class), any(Validator.class), any(Caller.class));
+        verify(menuBuilder).addRename(any(Command.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder, never()).addNewTopLevelMenu(any());
@@ -167,9 +178,26 @@ public class PerspectiveEditorPresenterTest {
 
         verify(menuBuilder).addSave(any(Command.class));
         verify(menuBuilder).addCopy(any(Path.class), any(Validator.class), any(Caller.class));
-        verify(menuBuilder).addRename(any(Path.class), any(Validator.class), any(Caller.class));
+        verify(menuBuilder).addRename(any(Command.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder).addDelete(any(Path.class), any(Caller.class));
         verify(menuBuilder).addNewTopLevelMenu(any());
+    }
+
+    @Test
+    public void testGetContentSupplier() {
+
+        final LayoutTemplate layoutTemplate = mock(LayoutTemplate.class);
+
+        doReturn(layoutTemplate).when(layoutEditorPlugin).getLayout();
+
+        final Supplier<LayoutTemplate> contentSupplier = presenter.getContentSupplier();
+
+        assertEquals(layoutTemplate, contentSupplier.get());
+    }
+
+    @Test
+    public void testGetSaveAndRenameServiceCaller() {
+        assertEquals(perspectiveServices, presenter.getSaveAndRenameServiceCaller());
     }
 }

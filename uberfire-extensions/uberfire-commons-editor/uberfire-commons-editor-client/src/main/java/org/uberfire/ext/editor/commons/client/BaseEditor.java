@@ -20,6 +20,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
+
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -28,6 +30,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.ui.IsWidget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
+import org.jboss.errai.ioc.client.api.ManagedInstance;
 import org.uberfire.backend.vfs.ObservablePath;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.client.mvp.PlaceManager;
@@ -40,12 +43,14 @@ import org.uberfire.ext.editor.commons.client.event.ConcurrentRenameIgnoredEvent
 import org.uberfire.ext.editor.commons.client.history.VersionRecordManager;
 import org.uberfire.ext.editor.commons.client.menu.BasicFileMenuBuilder;
 import org.uberfire.ext.editor.commons.client.menu.MenuItems;
+import org.uberfire.ext.editor.commons.client.menu.common.SaveAndRenameCommandFactory;
 import org.uberfire.ext.editor.commons.client.resources.i18n.CommonConstants;
 import org.uberfire.ext.editor.commons.client.validation.DefaultFileNameValidator;
 import org.uberfire.ext.editor.commons.client.validation.Validator;
 import org.uberfire.ext.editor.commons.service.support.SupportsCopy;
 import org.uberfire.ext.editor.commons.service.support.SupportsDelete;
 import org.uberfire.ext.editor.commons.service.support.SupportsRename;
+import org.uberfire.ext.editor.commons.service.support.SupportsSaveAndRename;
 import org.uberfire.ext.editor.commons.version.events.RestoreEvent;
 import org.uberfire.java.nio.base.version.VersionRecord;
 import org.uberfire.mvp.Command;
@@ -64,7 +69,7 @@ import static org.uberfire.ext.widgets.common.client.common.ConcurrentChangePopu
 import static org.uberfire.ext.widgets.common.client.common.ConcurrentChangePopup.newConcurrentRename;
 import static org.uberfire.ext.widgets.common.client.common.ConcurrentChangePopup.newConcurrentUpdate;
 
-public abstract class BaseEditor {
+public abstract class BaseEditor<T, M> {
 
     protected boolean isReadOnly;
 
@@ -87,10 +92,16 @@ public abstract class BaseEditor {
     protected VersionRecordManager versionRecordManager;
 
     @Inject
+    protected ManagedInstance<BasicFileMenuBuilder> menuBuilderManagedInstance;
+
+    @Inject
     protected BasicFileMenuBuilder menuBuilder;
 
     @Inject
     protected DefaultFileNameValidator fileNameValidator;
+
+    @Inject
+    protected SaveAndRenameCommandFactory<T, M> saveAndRenameCommandFactory;
 
     @Inject
     protected Event<ConcurrentDeleteAcceptedEvent> concurrentDeleteAcceptedEvent;
@@ -219,9 +230,7 @@ public abstract class BaseEditor {
                                 getCopyServiceCaller());
         }
         if (menuItems.contains(RENAME)) {
-            menuBuilder.addRename(versionRecordManager.getPathToLatest(),
-                                  getRenameValidator(),
-                                  getRenameServiceCaller());
+            menuBuilder.addRename(saveAndRename());
         }
         if (menuItems.contains(DELETE)) {
             menuBuilder.addDelete(versionRecordManager.getCurrentPath(),
@@ -233,6 +242,19 @@ public abstract class BaseEditor {
         if (menuItems.contains(HISTORY)) {
             menuBuilder.addNewTopLevelMenu(versionRecordManager.buildMenu());
         }
+    }
+
+    protected Command saveAndRename() {
+        return saveAndRenameCommandFactory.create(getPathSupplier(),
+                                                  getRenameValidator(),
+                                                  getSaveAndRenameServiceCaller(),
+                                                  getMetadataSupplier(),
+                                                  getContentSupplier(),
+                                                  isDirtySupplier());
+    }
+
+    Supplier<Path> getPathSupplier() {
+        return () -> versionRecordManager.getPathToLatest();
     }
 
     /**
@@ -488,6 +510,30 @@ public abstract class BaseEditor {
 
     protected abstract void loadContent();
 
+    protected Supplier<T> getContentSupplier() {
+        return () -> null;
+    }
+
+    protected Supplier<Boolean> isDirtySupplier() {
+
+        return () -> {
+
+            final T currentContent;
+
+            try {
+                currentContent = getContentSupplier().get();
+            } catch (final Exception e) {
+                return false;
+            }
+
+            return isDirty(currentContent.hashCode());
+        };
+    }
+
+    protected Supplier<M> getMetadataSupplier() {
+        return () -> null;
+    }
+
     /**
      * Needs to be overwritten for save to work
      */
@@ -500,6 +546,10 @@ public abstract class BaseEditor {
     }
 
     protected Caller<? extends SupportsRename> getRenameServiceCaller() {
+        return null;
+    }
+
+    protected Caller<? extends SupportsSaveAndRename<T, M>> getSaveAndRenameServiceCaller() {
         return null;
     }
 
@@ -527,4 +577,3 @@ public abstract class BaseEditor {
         return this.versionRecordManager;
     }
 }
-

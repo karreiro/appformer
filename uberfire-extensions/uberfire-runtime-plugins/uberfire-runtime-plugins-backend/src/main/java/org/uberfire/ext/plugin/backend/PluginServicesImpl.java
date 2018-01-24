@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
@@ -42,7 +43,9 @@ import org.jboss.errai.bus.server.annotations.Service;
 import org.jboss.errai.security.shared.api.identity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.uberfire.ext.editor.commons.backend.service.SaveAndRenameServiceImpl;
 import org.uberfire.ext.editor.commons.backend.validation.DefaultFileNameValidator;
+import org.uberfire.ext.editor.commons.file.DefaultMetadata;
 import org.uberfire.ext.plugin.event.MediaDeleted;
 import org.uberfire.ext.plugin.event.PluginAdded;
 import org.uberfire.ext.plugin.event.PluginDeleted;
@@ -114,6 +117,8 @@ public class PluginServicesImpl implements PluginServices {
     private DefaultFileNameValidator defaultFileNameValidator;
     @Inject
     private User identity;
+    @Inject
+    private SaveAndRenameServiceImpl<Plugin, DefaultMetadata> saveAndRenameService;
     private FileSystem fileSystem;
     private Path root;
 
@@ -133,6 +138,8 @@ public class PluginServicesImpl implements PluginServices {
         }
 
         this.root = fileSystem.getRootDirectories().iterator().next();
+
+        saveAndRenameService.init(this);
     }
 
     @Override
@@ -324,6 +331,16 @@ public class PluginServicesImpl implements PluginServices {
     }
 
     @Override
+    public org.uberfire.backend.vfs.Path save(final Plugin plugin,
+                                              final String commitMessage) {
+
+        if (plugin instanceof PluginSimpleContent) {
+            return save((PluginSimpleContent) plugin, commitMessage);
+        }
+
+        return null;
+    }
+
     public org.uberfire.backend.vfs.Path save(final PluginSimpleContent plugin,
                                               final String commitMessage) {
 
@@ -543,7 +560,6 @@ public class PluginServicesImpl implements PluginServices {
                                               final String newName,
                                               final String comment) {
 
-
         return copy(path, newName, null, comment);
     }
 
@@ -560,9 +576,9 @@ public class PluginServicesImpl implements PluginServices {
 
         try {
             getIoService().startBatch(fileSystem,
-                    commentedOption(comment));
+                                      commentedOption(comment));
             getIoService().copy(convert(path).getParent(),
-                    newPath);
+                                newPath);
         } finally {
             getIoService().endBatch();
         }
@@ -573,7 +589,7 @@ public class PluginServicesImpl implements PluginServices {
         String registry = createRegistry(pluginContent);
 
         pluginAddedEvent.fire(new PluginAdded(pluginContent,
-                sessionInfo));
+                                              sessionInfo));
 
         return result;
     }
@@ -691,8 +707,8 @@ public class PluginServicesImpl implements PluginServices {
                                          fileContent);
         }
         return new LayoutEditorModel(pluginName,
-                PluginType.PERSPECTIVE_LAYOUT,
-                path, null).emptyLayout();
+                                     PluginType.PERSPECTIVE_LAYOUT,
+                                     path, null).emptyLayout();
     }
 
     @Override
@@ -842,5 +858,22 @@ public class PluginServicesImpl implements PluginServices {
 
     private Path getMenuItemsPath(final Path rootPlugin) {
         return rootPlugin.resolve("info.dynamic");
+    }
+
+    @Override
+    public org.uberfire.backend.vfs.Path save(final org.uberfire.backend.vfs.Path _path,
+                                              final Plugin content,
+                                              final DefaultMetadata _metadata,
+                                              final String comment) {
+        return save(content, comment);
+    }
+
+    @Override
+    public org.uberfire.backend.vfs.Path saveAndRename(final org.uberfire.backend.vfs.Path path,
+                                                       final String newFileName,
+                                                       final DefaultMetadata metadata,
+                                                       final Plugin content,
+                                                       final String comment) {
+        return saveAndRenameService.saveAndRename(path, newFileName, metadata, content, comment);
     }
 }

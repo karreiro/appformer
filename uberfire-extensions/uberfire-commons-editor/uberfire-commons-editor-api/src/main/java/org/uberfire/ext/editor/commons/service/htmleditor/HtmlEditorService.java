@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 JBoss, by Red Hat, Inc
+ * Copyright 2018 Red Hat, Inc. and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package org.uberfire.ext.layout.editor.api;
-
-import java.util.Collection;
+package org.uberfire.ext.editor.commons.service.htmleditor;
 
 import org.jboss.errai.bus.server.annotations.Remote;
 import org.uberfire.backend.vfs.Path;
@@ -25,26 +23,14 @@ import org.uberfire.ext.editor.commons.service.support.SupportsCopy;
 import org.uberfire.ext.editor.commons.service.support.SupportsDelete;
 import org.uberfire.ext.editor.commons.service.support.SupportsRename;
 import org.uberfire.ext.editor.commons.service.support.SupportsSaveAndRename;
-import org.uberfire.ext.layout.editor.api.editor.LayoutTemplate;
-import org.uberfire.ext.plugin.model.Plugin;
 
 @Remote
-public interface PerspectiveServices extends SupportsCopy,
-                                             SupportsDelete,
-                                             SupportsRename,
-                                             SupportsSaveAndRename<LayoutTemplate, DefaultMetadata> {
+public interface HtmlEditorService extends SupportsCopy,
+                                           SupportsRename,
+                                           SupportsDelete,
+                                           SupportsSaveAndRename<String, DefaultMetadata> {
 
-    Plugin createNewPerspective(String name, LayoutTemplate.Style style);
+    String readAllString(final Path path);
 
-    Collection<LayoutTemplate> listLayoutTemplates();
-
-    LayoutTemplate getLayoutTemplate(String perspectiveName);
-
-    LayoutTemplate getLayoutTemplate(Path perspectivePath);
-
-    LayoutTemplate getLayoutTemplate(Plugin perspectivePlugin);
-
-    LayoutTemplate convertToLayoutTemplate(String layoutModel);
-
-    Path saveLayoutTemplate(Path perspectivePath, LayoutTemplate layoutTemplate, String commitMessage);
+    Path write(final Path path, final String content);
 }
