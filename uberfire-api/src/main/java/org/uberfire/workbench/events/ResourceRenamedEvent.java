@@ -29,6 +29,7 @@ import static org.kie.soup.commons.validation.PortablePreconditions.checkNotNull
 @Portable
 public class ResourceRenamedEvent extends ResourceRenamed implements ResourceEvent {
 
+    private String uuid;
     private Path sourcePath;
     private SessionInfo sessionInfo;
 
@@ -42,10 +43,15 @@ public class ResourceRenamedEvent extends ResourceRenamed implements ResourceEve
                                        sourcePath);
         this.sessionInfo = checkNotNull("sessionInfo",
                                         sessionInfo);
+        this.uuid = org.uberfire.commons.uuid.UUID.uuid();
     }
 
     public SessionInfo getSessionInfo() {
         return sessionInfo;
+    }
+
+    public String getUuid() {
+        return uuid;
     }
 
     @Override

@@ -22,13 +22,18 @@ import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
+import com.google.gwt.core.client.GWT;
 import org.jboss.errai.bus.client.api.messaging.Message;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
+import org.uberfire.backend.vfs.ObservablePath;
 import org.uberfire.backend.vfs.Path;
+import org.uberfire.client.mvp.RenameInProgressEvent;
+import org.uberfire.client.mvp.SaveInProgressEvent;
 import org.uberfire.ext.editor.commons.client.file.CommandWithFileNameAndCommitMessage;
 import org.uberfire.ext.editor.commons.client.file.FileNameAndCommitMessage;
 import org.uberfire.ext.editor.commons.client.file.popups.RenamePopUpPresenter;
+import org.uberfire.ext.editor.commons.client.history.VersionRecordManager;
 import org.uberfire.ext.editor.commons.client.resources.i18n.CommonConstants;
 import org.uberfire.ext.editor.commons.client.validation.Validator;
 import org.uberfire.ext.editor.commons.service.support.SupportsSaveAndRename;
@@ -60,6 +65,11 @@ public class SaveAndRenameCommandBuilder<T, M> {
     };
     private Command onError = () -> {
     };
+
+    @Inject
+    protected Event<SaveInProgressEvent> renameInProgressEvent;
+
+    protected VersionRecordManager versionRecordManager;
 
     @Inject
     public SaveAndRenameCommandBuilder(final RenamePopUpPresenter renamePopUpPresenter,
@@ -116,6 +126,10 @@ public class SaveAndRenameCommandBuilder<T, M> {
         return this;
     }
 
+    public void setVersionRecordManager(final VersionRecordManager versionRecordManager) {
+        this.versionRecordManager = versionRecordManager;
+    }
+
     public Command build() {
 
         checkNotNull("pathSupplier", pathSupplier);
@@ -138,7 +152,7 @@ public class SaveAndRenameCommandBuilder<T, M> {
 
     CommandWithFileNameAndCommitMessage makeSaveAndRenameCommand() {
         return (details) -> {
-
+            renameInProgressEvent.fire(new SaveInProgressEvent(versionRecordManager.getPathToLatest()));
             showBusyIndicator();
             callSaveAndRename(details);
         };
@@ -146,7 +160,7 @@ public class SaveAndRenameCommandBuilder<T, M> {
 
     CommandWithFileNameAndCommitMessage makeRenameCommand() {
         return (details) -> {
-
+            renameInProgressEvent.fire(new SaveInProgressEvent(versionRecordManager.getPathToLatest()));
             showBusyIndicator();
             callRename(details);
         };
@@ -176,7 +190,23 @@ public class SaveAndRenameCommandBuilder<T, M> {
 
     RemoteCallback<Path> onSuccess() {
         return (Path path) -> {
+
+            ObservablePath latesst = versionRecordManager.getPathToLatest();
+            GWT.log("latesst --------------------------------" + System.identityHashCode(latesst));
+            GWT.log(latesst.getOriginal().toURI());
+            GWT.log(latesst.toURI());
+
+            ObservablePath current = versionRecordManager.getCurrentPath();
+            GWT.log("current --------------------------------" + System.identityHashCode(current));
+            GWT.log(current.getOriginal().toURI());
+            GWT.log(current.toURI());
+
+            GWT.log("path class --------------------------------");
+            GWT.log(path.getClass().getCanonicalName());
+
+            versionRecordManager.reloadVersions(path);
             onSuccess.execute(path);
+
             hideRenamePopup();
             hideBusyIndicator();
             notifyItemRenamedSuccessfully();
