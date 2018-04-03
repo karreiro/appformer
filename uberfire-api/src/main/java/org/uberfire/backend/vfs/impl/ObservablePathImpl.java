@@ -22,6 +22,7 @@ import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import com.google.gwt.core.client.GWT;
 import org.jboss.errai.common.client.api.annotations.Portable;
 import org.jboss.errai.ioc.client.container.IOC;
 import org.jboss.errai.security.shared.api.identity.User;
@@ -92,6 +93,7 @@ public class ObservablePathImpl implements ObservablePath,
             this.original = path;
         }
         this.path = this.original;
+        GWT.log("(3) --> updating: " + this.path.toURI());
         return this;
     }
 
@@ -183,8 +185,12 @@ public class ObservablePathImpl implements ObservablePath,
     }
 
     void onResourceRenamed(@Observes final ResourceRenamedEvent renamedEvent) {
+        GWT.log(" ResourceRenamedEvent ---------> " + renamedEvent.getUuid());
+        GWT.log(" ---------> " + System.identityHashCode(this) + " => " + (path != null && path.equals(renamedEvent.getPath())));
         if (path != null && path.equals(renamedEvent.getPath())) {
+
             path = renamedEvent.getDestinationPath();
+            GWT.log("(0) --> updating: " + path.toURI());
             if (sessionInfo.getId().equals(renamedEvent.getSessionInfo().getId())) {
                 executeRenameCommands();
             } else {
@@ -193,6 +199,8 @@ public class ObservablePathImpl implements ObservablePath,
                                                renamedEvent.getSessionInfo().getId(),
                                                renamedEvent.getSessionInfo().getIdentity());
             }
+        } else {
+            GWT.log("--> not updating.");
         }
     }
 
@@ -246,6 +254,7 @@ public class ObservablePathImpl implements ObservablePath,
                             break;
                         case RENAME:
                             path = ((ResourceRenamed) change).getDestinationPath();
+                            GWT.log("(1) --> updating: " + path.toURI());
                             executeRenameCommands();
                             break;
                         case UPDATE:
@@ -269,6 +278,7 @@ public class ObservablePathImpl implements ObservablePath,
                             break;
                         case RENAME:
                             path = ((ResourceRenamed) change).getDestinationPath();
+                            GWT.log("(2) --> updating: " + path.toURI());
                             executeConcurrentRenameCommand(path,
                                                            ((ResourceRenamed) change).getDestinationPath(),
                                                            batchEvent.getSessionInfo().getId(),
@@ -443,7 +453,9 @@ public class ObservablePathImpl implements ObservablePath,
         }
 
         if (o instanceof ObservablePathImpl) {
-            return this.getOriginal().equals(((ObservablePathImpl) o).getOriginal());
+            Path original = this.getOriginal();
+            Path original1 = ((ObservablePathImpl) o).getOriginal();
+            return original.toURI().equals(original1.toURI());
         }
 
         return this.getOriginal().equals(o);

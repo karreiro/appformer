@@ -18,10 +18,12 @@ package org.uberfire.client.mvp;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -35,6 +37,7 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.security.shared.api.identity.User;
+import org.uberfire.backend.vfs.Path;
 import org.uberfire.backend.vfs.impl.LockInfo;
 import org.uberfire.backend.vfs.impl.LockResult;
 import org.uberfire.client.resources.i18n.WorkbenchConstants;
@@ -270,11 +273,17 @@ public class LockManagerImpl implements LockManager {
     }
 
     private boolean isLockedByCurrentUser() {
-        return lockInfo.isLocked() && lockInfo.lockedBy().equals(user.getIdentifier());
+        String s = lockInfo.lockedBy();
+        String identifier = user.getIdentifier();
+        boolean locked = lockInfo.isLocked();
+        GWT.log("--->>> " + s + " | " + identifier + " | " + locked);
+        return locked && s.equals(identifier);
     }
 
     private void updateLockInfo(@Observes LockInfo lockInfo) {
-        if (lockTarget != null && lockInfo.getFile().equals(lockTarget.getPath())) {
+        Path file = lockInfo.getFile();
+        Path path = lockTarget.getPath();
+        if (lockTarget != null && file.equals(path)) {
             this.lockInfo = lockInfo;
             this.lockSyncComplete = true;
 

@@ -26,6 +26,7 @@ import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.ui.IsWidget;
 import org.jboss.errai.common.client.api.Caller;
@@ -251,7 +252,7 @@ public abstract class BaseEditor<T, M> {
 
     protected Command getSaveAndRename() {
 
-        return getSaveAndRenameCommandBuilder()
+        SaveAndRenameCommandBuilder<T, M> builder = getSaveAndRenameCommandBuilder()
                 .addPathSupplier(getPathSupplier())
                 .addValidator(getRenameValidator())
                 .addValidator(getSaveValidator())
@@ -259,7 +260,11 @@ public abstract class BaseEditor<T, M> {
                 .addMetadataSupplier(getMetadataSupplier())
                 .addContentSupplier(getContentSupplier())
                 .addIsDirtySupplier(isDirtySupplier())
-                .addSuccessCallback(onSuccess())
+                .addSuccessCallback(onSuccess());
+
+        builder.setVersionRecordManager(versionRecordManager);
+
+        return builder
                 .build();
     }
 
@@ -306,7 +311,7 @@ public abstract class BaseEditor<T, M> {
     }
 
     protected Supplier<Path> getPathSupplier() {
-        return () -> versionRecordManager.getPathToLatest();
+        return () -> versionRecordManager.getCurrentPath();
     }
 
     /**
@@ -426,7 +431,6 @@ public abstract class BaseEditor<T, M> {
      * Effectively the same as reload() but don't reset concurrentUpdateSessionInfo
      */
     protected void onRename() {
-        refreshTitle();
         baseView.showBusyIndicator(CommonConstants.INSTANCE.Loading());
         loadContent();
         changeTitleNotification.fire(new ChangeTitleWidgetEvent(place,
@@ -437,6 +441,7 @@ public abstract class BaseEditor<T, M> {
                                         null),
                 versionRecordManager.getCurrentPath(),
                 this::selectVersion);
+        refreshTitle();
     }
 
     /**
@@ -449,7 +454,12 @@ public abstract class BaseEditor<T, M> {
     }
 
     public String getTitleText() {
-        return versionRecordManager.getCurrentPath().getFileName() + " - " + type.getDescription();
+        ObservablePath path = versionRecordManager.getCurrentPath();
+
+        GWT.log("(0) --> reading: " + path.toURI());
+        GWT.log("(0) --> id     : " + System.identityHashCode(path));
+
+        return path.getFileName() + " - " + type.getDescription();
     }
 
     private void refreshTitle() {
