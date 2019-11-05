@@ -16,6 +16,7 @@
 
 package org.uberfire.client.views.pfly.sys;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.ScriptInjector;
 import org.gwtbootstrap3.client.GwtBootstrap3ClientBundle;
 
@@ -25,6 +26,10 @@ import static org.uberfire.client.views.pfly.sys.MomentUtils.setMomentLocale;
  * Utilities for ensuring the PatternFly/BS3 system is working early enough that the app can start correctly.
  */
 public class PatternFlyBootstrapper {
+
+    private static final String MONACO_EDITOR_LOADER_FILE = "monaco-editor/dev/vs/loader.js";
+
+    private static final String MONACO_EDITOR_BASE_PATH = "monaco-editor/dev";
 
     private static boolean isPrettifyLoaded = false;
 
@@ -39,6 +44,8 @@ public class PatternFlyBootstrapper {
     private static boolean isD3Loaded = false;
 
     private static boolean isJQueryUILoaded = false;
+
+    private static boolean isMonacoEditorLoaderLoaded = false;
 
     /**
      * Uses GWT's ScriptInjector to put jQuery in the page if it isn't already. All Errai IOC beans that rely on
@@ -119,6 +126,48 @@ public class PatternFlyBootstrapper {
         }
     }
 
+    public static void ensureMonacoEditorLoaderIsAvailable() {
+        if (!isMonacoEditorLoaderLoaded) {
+
+            final String monacoAbsolutePath = GWT.getModuleBaseURL() + MONACO_EDITOR_BASE_PATH;
+            final String amdLoaderScript = PatternFlyClientBundle.INSTANCE.monacoAMDLoader().getText();
+
+            ScriptInjector.fromString(enclosureByAMDNamespace(monacoAbsolutePath, amdLoaderScript))
+                    .setWindow(ScriptInjector.TOP_WINDOW)
+                    .inject();
+
+            isMonacoEditorLoaderLoaded = true;
+        }
+    }
+
+    private static String enclosureByAMDNamespace(final String baseUrlPath,
+                                                  final String script) {
+
+        return "(new function() { this.require = { baseUrl: '" + baseUrlPath + "' }; "
+                + script
+                + " window.__MonacoAMDLoader = _amdLoaderGlobal });";
+    }
+
+    private static void initializeAMDLoader() {
+        final String monacoAbsolutePath = GWT.getModuleBaseURL() + MONACO_EDITOR_BASE_PATH;
+        initializeAMDLoader(monacoAbsolutePath);
+    }
+
+    private static void injectAMDLoader() {
+        final String scriptUrl = GWT.getModuleName() + "/" + MONACO_EDITOR_LOADER_FILE;
+        ScriptInjector.fromUrl(scriptUrl)
+                .setWindow(ScriptInjector.TOP_WINDOW)
+                .inject();
+    }
+
+    private static native void initializeAMDLoader(final String baseUrlPath) /*-{
+        if (!$wnd['require']) {
+            $wnd['require'] = {baseUrl: baseUrlPath};
+        } else {
+            throw console.error('Monaco Editor ADM loader could not be initialized. Check "window.require" object.');
+        }
+    }-*/;
+
     /**
      * Checks to see if jQuery is already present.
      * @return true is jQuery is loaded, false otherwise.
@@ -127,4 +176,3 @@ public class PatternFlyBootstrapper {
         return (typeof $wnd['jQuery'] !== 'undefined');
     }-*/;
 }
-

@@ -328,6 +328,48 @@
               <overWriteSnapshots>true</overWriteSnapshots>
             </configuration>
           </execution>
+          <execution>
+            <id>unpack-requirejs</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.webjars.npm</groupId>
+                  <artifactId>requirejs</artifactId>
+                  <version>${version.org.webjars.npm.requirejs}</version>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/requirejs</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+            </configuration>
+          </execution>
+          <execution>
+            <id>unpack-monaco-editor</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.webjars.npm</groupId>
+                  <artifactId>monaco-editor</artifactId>
+                  <version>${version.org.webjars.npm.monaco-editor}</version>
+                  <type>jar</type>
+                  <overWrite>true</overWrite>
+                  <outputDirectory>${project.build.directory}/monaco-editor</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -441,6 +483,42 @@
                   <directory>${project.build.directory}/d3/META-INF/resources/webjars/d3/${version.org.webjars.bower.d3js}/</directory>
                   <includes>
                     <include>d3.min.js</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-requirejs</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/org/uberfire/client/views/static/requirejs</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.build.directory}/requirejs/META-INF/resources/webjars/requirejs/${version.org.webjars.npm.requirejs}/</directory>
+                  <includes>
+                    <include>require.js</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-monaco-editor</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}/org/uberfire/client/views/static/monaco-editor</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${project.build.directory}/monaco-editor/META-INF/resources/webjars/monaco-editor/${version.org.webjars.npm.monaco-editor}/</directory>
+                  <includes>
+                    <include>**</include>
                   </includes>
                 </resource>
               </resources>
